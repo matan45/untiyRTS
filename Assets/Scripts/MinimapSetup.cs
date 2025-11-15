@@ -17,7 +17,20 @@ public class MinimapSetup : MonoBehaviour
     {
         SetupMinimapRenderTexture();
     }
-    
+
+    void LateUpdate()
+    {
+        // Check if we need to setup the render texture
+        // This handles cases where references are set after Start()
+        if (minimapCamera != null && minimapDisplay != null)
+        {
+            if (minimapRenderTexture == null || minimapDisplay.texture == null)
+            {
+                SetupMinimapRenderTexture();
+            }
+        }
+    }
+
     void OnValidate()
     {
         // Auto-setup in editor when component is added/modified
