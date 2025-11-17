@@ -91,6 +91,10 @@ namespace RTS.UI
             {
                 actionPanel.SetActive(false);
             }
+            else
+            {
+                Debug.LogError("BuildingActionUIManager: actionPanel is null in Start()!");
+            }
         }
 
         private void OnDestroy()
@@ -165,6 +169,9 @@ namespace RTS.UI
             {
                 ApplyButtonLayoutSizing(actionConfig);
             }
+
+            // Initial button state update (event-driven updates will handle subsequent changes)
+            UpdateButtonStates();
         }
 
         private void ApplyUICustomization()
@@ -209,14 +216,28 @@ namespace RTS.UI
             if (buttonContainer == null)
                 return;
 
-            // Remove existing layout components immediately
+            // Remove existing layout components
+            // Per CLAUDE.md guidelines: Avoid DestroyImmediate in runtime code
+            // Disable first to prevent conflicts, then destroy at end of frame
             var existingGridLayout = buttonContainer.GetComponent<UnityEngine.UI.GridLayoutGroup>();
             var existingHorizontalLayout = buttonContainer.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             var existingVerticalLayout = buttonContainer.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
 
-            if (existingGridLayout != null) DestroyImmediate(existingGridLayout);
-            if (existingHorizontalLayout != null) DestroyImmediate(existingHorizontalLayout);
-            if (existingVerticalLayout != null) DestroyImmediate(existingVerticalLayout);
+            if (existingGridLayout != null)
+            {
+                existingGridLayout.enabled = false;
+                Destroy(existingGridLayout);
+            }
+            if (existingHorizontalLayout != null)
+            {
+                existingHorizontalLayout.enabled = false;
+                Destroy(existingHorizontalLayout);
+            }
+            if (existingVerticalLayout != null)
+            {
+                existingVerticalLayout.enabled = false;
+                Destroy(existingVerticalLayout);
+            }
 
             // Apply padding
             var rectTransform = buttonContainer.GetComponent<RectTransform>();
@@ -285,7 +306,9 @@ namespace RTS.UI
                     var layoutElement = child.GetComponent<UnityEngine.UI.LayoutElement>();
                     if (layoutElement != null)
                     {
-                        DestroyImmediate(layoutElement);
+                        // Per CLAUDE.md: Avoid DestroyImmediate in runtime
+                        layoutElement.enabled = false;
+                        Destroy(layoutElement);
                     }
 
                     // Set RectTransform size directly for Grid (GridLayoutGroup will override anyway)
@@ -417,12 +440,23 @@ namespace RTS.UI
             activeButtons.Clear();
         }
 
-        private void Update()
+        // Event-driven approach: Update button states when resources change
+        // instead of polling in Update() - per CLAUDE.md performance guidelines
+        private void OnEnable()
         {
-            // Update button states periodically (every 10 frames to reduce overhead)
-            if (currentBuilding != null && Time.frameCount % 10 == 0)
+            // Subscribe to resource change events if ResourceManager exists
+            if (ResourceManager.Instance != null)
             {
-                UpdateButtonStates();
+                ResourceManager.Instance.OnResourcesChanged += UpdateButtonStates;
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Unsubscribe to prevent memory leaks
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.OnResourcesChanged -= UpdateButtonStates;
             }
         }
 

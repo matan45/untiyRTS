@@ -53,16 +53,16 @@ public class BuildingMenuController : MonoBehaviour
                 Destroy(button.gameObject);
         }
         buildingButtons.Clear();
-        
+
         // Create buttons for each building
         foreach (var buildingData in availableBuildings)
         {
             if (buildingData == null || buildingButtonPrefab == null)
                 continue;
-                
+
             GameObject buttonObj = Instantiate(buildingButtonPrefab, buildingButtonContainer);
             BuildingButton button = buttonObj.GetComponent<BuildingButton>();
-            
+
             if (button != null)
             {
                 button.Initialize(buildingData);

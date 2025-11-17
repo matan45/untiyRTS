@@ -27,6 +27,12 @@ namespace RTS.Buildings
 
         [SerializeField] private float textHeightOffset = 0.2f;
 
+        [Tooltip("Font size for construction progress text")]
+        [SerializeField] private float constructionTextFontSize = 3f;
+
+        [Tooltip("Outline width for construction text visibility")]
+        [SerializeField] private float constructionTextOutlineWidth = 0.2f;
+
         public BuildingData Data => buildingData;
         public bool IsConstructed { get; private set; }
 
@@ -38,6 +44,11 @@ namespace RTS.Buildings
         private bool isUpgrading = false;
         private float upgradeProgress = 0f;
         private GameObject constructionTextObject;
+
+        // Cached references for performance (per CLAUDE.md guidelines)
+        private Camera mainCamera;
+        private Renderer buildingRenderer;
+        private float cachedBuildingHeight;
 
         void Start()
         {
@@ -69,6 +80,14 @@ namespace RTS.Buildings
             {
                 constructionText.gameObject.SetActive(false);
             }
+
+            // Cache references for performance (per CLAUDE.md guidelines - avoid lookups in Update)
+            mainCamera = Camera.main;
+            buildingRenderer = GetComponentInChildren<Renderer>();
+            if (buildingRenderer != null)
+            {
+                cachedBuildingHeight = buildingRenderer.bounds.size.y;
+            }
         }
 
         void OnDestroy()
@@ -94,22 +113,15 @@ namespace RTS.Buildings
         void Update()
         {
             // Update construction text to face camera and position
-            if (constructionText != null && constructionText.gameObject.activeSelf && Camera.main != null)
+            // Uses cached references for performance (per CLAUDE.md guidelines)
+            if (constructionText != null && constructionText.gameObject.activeSelf && mainCamera != null)
             {
-                // Get building height from renderer bounds
-                float buildingHeight = 0f;
-                var renderer = GetComponentInChildren<Renderer>();
-                if (renderer != null)
-                {
-                    buildingHeight = renderer.bounds.size.y;
-                }
-
                 // Position text at top of building + offset
                 constructionText.transform.position =
-                    transform.position + Vector3.up * (buildingHeight + textHeightOffset);
+                    transform.position + Vector3.up * (cachedBuildingHeight + textHeightOffset);
 
                 // Face the camera
-                constructionText.transform.LookAt(Camera.main.transform);
+                constructionText.transform.LookAt(mainCamera.transform);
                 constructionText.transform.Rotate(0, 180, 0); // Face the camera properly
             }
         }
@@ -135,14 +147,14 @@ namespace RTS.Buildings
             // Add TextMeshPro component
             constructionText = constructionTextObject.AddComponent<TextMeshPro>();
 
-            // Configure text appearance
-            constructionText.fontSize = 3;
+            // Configure text appearance (per CLAUDE.md: avoid magic numbers)
+            constructionText.fontSize = constructionTextFontSize;
             constructionText.alignment = TextAlignmentOptions.Center;
             constructionText.color = Color.yellow;
             constructionText.text = "0%";
 
             // Add outline for better visibility
-            constructionText.outlineWidth = 0.2f;
+            constructionText.outlineWidth = constructionTextOutlineWidth;
             constructionText.outlineColor = Color.black;
 
             // Set rendering settings

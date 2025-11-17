@@ -79,6 +79,13 @@ namespace RTS.Actions
                 return;
             }
 
+            // Validate building data exists (per CLAUDE.md defensive programming guidelines)
+            if (building.Data == null)
+            {
+                Debug.LogWarning($"Cannot sell building {building.GameObject.name}: BuildingData is null");
+                return;
+            }
+
             // Calculate refund (50% of original cost)
             int refund = Mathf.FloorToInt(building.Data.creditsCost * 0.5f);
 
@@ -100,24 +107,39 @@ namespace RTS.Actions
 
         private void ExecuteUpgrade(Building building)
         {
+            // TODO: Add resource cost validation before upgrade
+            // TODO: Show upgrade progress UI
+            // TODO: Handle upgrade completion and replace building prefab
             if (building is IUpgradeable upgradeable)
             {
                 if (upgradeable.CanUpgrade())
                 {
                     upgradeable.StartUpgrade();
                 }
-               
+                else
+                {
+                    Debug.LogWarning($"Building {building.GameObject.name} cannot be upgraded at this time");
+                }
             }
-           
+            else
+            {
+                Debug.LogWarning($"Building {building.GameObject.name} does not implement IUpgradeable");
+            }
         }
 
         private void ExecuteRepair(Building building)
         {
+            // TODO: Add resource cost for repair (e.g., credits based on damage)
+            // TODO: Validate player has enough resources
+            // TODO: Show repair progress visual feedback
             if (building is IRepairable repairable)
             {
                 repairable.Repair();
             }
-           
+            else
+            {
+                Debug.LogWarning($"Building {building.GameObject.name} does not implement IRepairable");
+            }
         }
 
         private void ExecuteProduceUnit(Building building, string actionId)
@@ -127,12 +149,20 @@ namespace RTS.Actions
                 // Extract unit type from actionId (e.g., "produce_infantry" -> "infantry")
                 string unitType = actionId.Substring("produce_".Length);
 
-                // In a real implementation, you'd load the UnitData based on unitType
-                // For now, we'll just log it
+                // TODO: Implement unit production system
+                // - Load UnitData asset from Resources or Addressables based on unitType
+                // - Validate resource costs (credits, power, population cap)
+                // - Add unit to production queue with timer
+                // - Spawn unit at rally point when complete
+                // Example: UnitData unitData = Resources.Load<UnitData>($"Units/{unitType}");
+                //          if (unitData != null) producer.ProduceUnit(unitData);
 
-                // TODO: Load UnitData asset and call producer.ProduceUnit(unitData)
+                Debug.LogWarning($"Unit production not yet implemented: {unitType}");
             }
-           
+            else
+            {
+                Debug.LogWarning($"Building {building.GameObject.name} does not implement IUnitProducer");
+            }
         }
 
         #endregion

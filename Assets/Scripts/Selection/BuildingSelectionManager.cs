@@ -149,7 +149,15 @@ namespace RTS.Selection
 
         private bool IsPointerOverUI()
         {
-            if (EventSystem.current == null || mousePositionAction == null)
+            // Per CLAUDE.md: Handle edge cases - missing EventSystem should prevent world clicks
+            if (EventSystem.current == null)
+            {
+                Debug.LogError("BuildingSelectionManager: EventSystem.current is null! UI input detection will not work. " +
+                               "Make sure an EventSystem exists in the scene.");
+                return true; // Return true to block world clicks when EventSystem is missing
+            }
+
+            if (mousePositionAction == null)
                 return false;
 
             Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();

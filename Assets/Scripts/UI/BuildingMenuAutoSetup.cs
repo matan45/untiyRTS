@@ -12,7 +12,7 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         SetupBuildingMenu();
         SetupBuildingButton();
     }
-    
+
     [ContextMenu("Setup Building Menu")]
     void SetupBuildingMenu()
     {
@@ -22,7 +22,7 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         {
             return;
         }
-        
+
         // Find UI elements
         Transform content = GameObject.Find("Content")?.transform;
         GameObject buttonPrefab = GameObject.Find("BuildingButtonPrefab");
@@ -31,31 +31,50 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         
         // Use reflection to set private fields
         var type = typeof(BuildingMenuController);
-        
+
         if (content != null)
         {
             var field = type.GetField("buildingButtonContainer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, content);
+            if (field != null)
+            {
+                field.SetValue(menuController, content);
+            }
         }
-        
+
         if (buttonPrefab != null)
         {
             var field = type.GetField("buildingButtonPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, buttonPrefab);
+            if (field != null)
+            {
+                field.SetValue(menuController, buttonPrefab);
+            }
         }
-        
+
         if (creditsText != null)
         {
             var field = type.GetField("creditsText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, creditsText);
+            if (field != null)
+            {
+                field.SetValue(menuController, creditsText);
+            }
         }
-        
+
         if (powerText != null)
         {
             var field = type.GetField("powerText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, powerText);
+            if (field != null)
+            {
+                field.SetValue(menuController, powerText);
+            }
         }
-        
+
+        // Re-initialize buttons now that references are set
+        // Use reflection to call the private InitializeButtons method
+        var initMethod = type.GetMethod("InitializeButtons", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (initMethod != null)
+        {
+            initMethod.Invoke(menuController, null);
+        }
     }
     
     [ContextMenu("Setup Building Button")]
