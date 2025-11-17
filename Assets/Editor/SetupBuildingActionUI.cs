@@ -65,7 +65,7 @@ public class SetupBuildingActionUI : EditorWindow
         GameObject accentBorder = CreateAccentBorder(actionPanel.transform);
 
         // Find or create BuildingActionUIManager
-        BuildingActionUIManager uiManager = FindObjectOfType<BuildingActionUIManager>();
+        BuildingActionUIManager uiManager = FindFirstObjectByType<BuildingActionUIManager>();
         if (uiManager == null)
         {
             uiManager = actionPanel.AddComponent<BuildingActionUIManager>();
@@ -265,7 +265,7 @@ public class SetupBuildingActionUI : EditorWindow
 
     private void FixExistingSetup()
     {
-        BuildingActionUIManager uiManager = FindObjectOfType<BuildingActionUIManager>();
+        BuildingActionUIManager uiManager = FindFirstObjectByType<BuildingActionUIManager>();
 
         if (uiManager == null)
         {
