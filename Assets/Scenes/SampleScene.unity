@@ -975,6 +975,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CanvasScalerSetup
   referenceResolution: {x: 1920, y: 1080}
   matchWidthOrHeight: 0.5
+--- !u!84 &541454649
+RenderTexture:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: MinimapRT
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 6
+  m_Width: 512
+  m_Height: 512
+  m_AntiAliasing: 1
+  m_MipCount: -1
+  m_DepthStencilFormat: 90
+  m_ColorFormat: 4
+  m_MipMap: 0
+  m_GenerateMips: 1
+  m_SRGB: 1
+  m_UseDynamicScale: 0
+  m_UseDynamicScaleExplicit: 0
+  m_BindMS: 0
+  m_EnableCompatibleFormat: 1
+  m_EnableRandomWrite: 0
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_Dimension: 2
+  m_VolumeDepth: 1
+  m_ShadowSamplingMode: 2
 --- !u!1 &675485905
 GameObject:
   m_ObjectHideFlags: 0
@@ -1496,7 +1533,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 1126541671}
+  m_Texture: {fileID: 541454649}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -1907,43 +1944,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1119607363}
   m_CullTransparentMesh: 1
---- !u!84 &1126541671
-RenderTexture:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: MinimapRT
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_IsAlphaChannelOptional: 0
-  serializedVersion: 6
-  m_Width: 512
-  m_Height: 512
-  m_AntiAliasing: 1
-  m_MipCount: -1
-  m_DepthStencilFormat: 90
-  m_ColorFormat: 4
-  m_MipMap: 0
-  m_GenerateMips: 1
-  m_SRGB: 1
-  m_UseDynamicScale: 0
-  m_UseDynamicScaleExplicit: 0
-  m_BindMS: 0
-  m_EnableCompatibleFormat: 1
-  m_EnableRandomWrite: 0
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 1
-    m_WrapV: 1
-    m_WrapW: 1
-  m_Dimension: 2
-  m_VolumeDepth: 1
-  m_ShadowSamplingMode: 2
 --- !u!1 &1259050202
 GameObject:
   m_ObjectHideFlags: 0
@@ -1958,6 +1958,7 @@ GameObject:
   - component: {fileID: 1259050204}
   - component: {fileID: 1259050203}
   - component: {fileID: 1259050208}
+  - component: {fileID: 1259050209}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -2056,6 +2057,18 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxRaycastDistance: 1000
   inputActions: {fileID: -944628639613478452, guid: f03c3e75d3540d147820bc2f3093a618, type: 3}
+--- !u!114 &1259050209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259050202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7735b20f31350c04b904a2d36f8fb7d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Actions.BuildingActionExecutor
 --- !u!1 &1344430131
 GameObject:
   m_ObjectHideFlags: 0
@@ -2739,7 +2752,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 1126541671}
+  m_TargetTexture: {fileID: 541454649}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -3309,6 +3322,9 @@ MonoBehaviour:
   buttonContainer: {fileID: 0}
   actionButtonPrefab: {fileID: 4966639158694590297, guid: da105c4a267ed5c48aa0db195d5797d8, type: 3}
   infoDisplay: {fileID: 0}
+  panelBackgroundImage: {fileID: 0}
+  headerBackgroundImage: {fileID: 0}
+  accentBorderImage: {fileID: 0}
 --- !u!225 &1966022521
 CanvasGroup:
   m_ObjectHideFlags: 0
