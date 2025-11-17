@@ -137,13 +137,30 @@ namespace RTS.Selection
                 return;
             }
 
-            // Don't select if mouse is over UI
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            // Don't select if mouse is over UI (use proper check for new Input System)
+            if (IsPointerOverUI())
             {
                 return;
             }
 
             TrySelectAtMousePosition();
+        }
+
+        private bool IsPointerOverUI()
+        {
+            if (EventSystem.current == null || mousePositionAction == null)
+                return false;
+
+            Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();
+            var eventData = new UnityEngine.EventSystems.PointerEventData(EventSystem.current)
+            {
+                position = mousePos
+            };
+
+            var results = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            return results.Count > 0;
         }
 
         private void OnRightClick(InputAction.CallbackContext context)

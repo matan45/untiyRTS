@@ -49,6 +49,17 @@ namespace RTS.UI
                 Debug.Log("BuildingActionUIManager: Auto-found ButtonContainer");
             }
 
+            // Ensure ButtonLayoutFixer is attached
+            if (buttonContainer != null)
+            {
+                var layoutFixer = buttonContainer.GetComponent<ButtonLayoutFixer>();
+                if (layoutFixer == null)
+                {
+                    layoutFixer = buttonContainer.gameObject.AddComponent<ButtonLayoutFixer>();
+                    Debug.Log("BuildingActionUIManager: Added ButtonLayoutFixer to ButtonContainer");
+                }
+            }
+
             if (infoDisplay == null)
             {
                 infoDisplay = transform.Find("InfoSection")?.GetComponent<BuildingInfoDisplay>();
@@ -198,6 +209,32 @@ namespace RTS.UI
             }
 
             Debug.Log($"Created {activeButtons.Count} action buttons for {currentBuilding.GameObject.name}");
+
+            // Force layout rebuild after creating buttons
+            if (buttonContainer != null)
+            {
+                // Fix button sizes by adding LayoutElements
+                var layoutFixer = buttonContainer.GetComponent<ButtonLayoutFixer>();
+                if (layoutFixer != null)
+                {
+                    layoutFixer.FixButtonSizes();
+                }
+
+                var containerRect = buttonContainer.GetComponent<RectTransform>();
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
+                Debug.Log("Forced layout rebuild on ButtonContainer");
+
+                // Log button positions for debugging
+                Debug.Log($"ButtonContainer size: {containerRect.rect.size}, position: {containerRect.anchoredPosition}");
+                for (int i = 0; i < buttonContainer.childCount; i++)
+                {
+                    var child = buttonContainer.GetChild(i);
+                    var childRect = child.GetComponent<RectTransform>();
+                    var buttonComponent = child.GetComponent<BuildingActionButton>();
+                    string actionName = buttonComponent != null ? buttonComponent.name : "Unknown";
+                    Debug.Log($"  Button {i} [{actionName}]: position={childRect.anchoredPosition}, size={childRect.rect.size}, anchors=({childRect.anchorMin}, {childRect.anchorMax})");
+                }
+            }
         }
 
         private void ClearButtons()

@@ -6,11 +6,14 @@ using RTS.Actions;
 
 namespace RTS.Buildings
 {
-    public class Building : MonoBehaviour, ISelectable, IBuildingActions
+    public class Building : MonoBehaviour, ISelectable, IBuildingActions, IUpgradeable
     {
         [Header("Building Configuration")]
         [SerializeField] private BuildingData buildingData;
         [SerializeField] private BuildingActionConfig actionConfig;
+
+        [Header("Upgrade Configuration")]
+        [SerializeField] private BuildingData upgradeData;
 
         [Header("Selection Visual")]
         [SerializeField] private SelectionVisualController selectionVisual;
@@ -23,6 +26,8 @@ namespace RTS.Buildings
         public GameObject GameObject => gameObject;
 
         private float constructionProgress = 0f;
+        private bool isUpgrading = false;
+        private float upgradeProgress = 0f;
     
         void Start()
         {
@@ -215,6 +220,52 @@ namespace RTS.Buildings
             {
                 Debug.LogError("BuildingActionExecutor.Instance is null! Cannot execute action.");
             }
+        }
+
+        #endregion
+
+        #region IUpgradeable Implementation
+
+        public BuildingData GetUpgradeData()
+        {
+            return upgradeData;
+        }
+
+        public bool CanUpgrade()
+        {
+            // Can upgrade if:
+            // 1. Building is constructed
+            // 2. Not currently upgrading
+            if (!IsConstructed || isUpgrading)
+                return false;
+
+            // TODO: Check if upgrade data is assigned (upgradeData != null)
+            // TODO: Check if player has enough resources
+            // For now, allow upgrades even without upgradeData set (for testing)
+            return true;
+        }
+
+        public void StartUpgrade()
+        {
+            if (!CanUpgrade())
+            {
+                Debug.LogWarning($"Cannot start upgrade for {gameObject.name}");
+                return;
+            }
+
+            isUpgrading = true;
+            upgradeProgress = 0f;
+            Debug.Log($"Started upgrade for {gameObject.name}");
+
+            // TODO: Implement actual upgrade logic
+            // - Deduct resources
+            // - Start upgrade timer/progress
+            // - Replace building prefab when complete
+        }
+
+        public float GetUpgradeProgress()
+        {
+            return isUpgrading ? upgradeProgress : 0f;
         }
 
         #endregion
