@@ -86,14 +86,18 @@ namespace RTS.Actions
                 return;
             }
 
+            // Validate ResourceManager exists before refunding
+            if (ResourceManager.Instance == null)
+            {
+                Debug.LogWarning("BuildingActionExecutor.ExecuteSell: ResourceManager.Instance is null!");
+                return;
+            }
+
             // Calculate refund (50% of original cost)
             int refund = Mathf.FloorToInt(building.Data.creditsCost * 0.5f);
 
             // Refund resources
-            if (ResourceManager.Instance != null)
-            {
-                ResourceManager.Instance.RefundResources(refund, 0);
-            }
+            ResourceManager.Instance.RefundResources(refund, 0);
 
             // Deselect if selected
             if (building.IsSelected && BuildingSelectionManager.Instance != null)

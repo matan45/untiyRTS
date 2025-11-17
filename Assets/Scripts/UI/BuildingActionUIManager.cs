@@ -170,6 +170,9 @@ namespace RTS.UI
                 ApplyButtonLayoutSizing(actionConfig);
             }
 
+            // Force immediate layout rebuild to prevent overlapping (per CLAUDE.md: handle edge cases)
+            StartCoroutine(RebuildLayoutNextFrame());
+
             // Initial button state update (event-driven updates will handle subsequent changes)
             UpdateButtonStates();
         }
@@ -216,27 +219,23 @@ namespace RTS.UI
             if (buttonContainer == null)
                 return;
 
-            // Remove existing layout components
-            // Per CLAUDE.md guidelines: Avoid DestroyImmediate in runtime code
-            // Disable first to prevent conflicts, then destroy at end of frame
-            var existingGridLayout = buttonContainer.GetComponent<UnityEngine.UI.GridLayoutGroup>();
-            var existingHorizontalLayout = buttonContainer.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-            var existingVerticalLayout = buttonContainer.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            // Remove ALL existing layout components immediately
+            // Must use DestroyImmediate here because we're adding a new layout component right after
+            // and Unity doesn't allow multiple LayoutGroup components on the same GameObject
+            var existingLayouts = buttonContainer.GetComponents<UnityEngine.UI.LayoutGroup>();
+            foreach (var layout in existingLayouts)
+            {
+                if (layout != null)
+                {
+                    DestroyImmediate(layout);
+                }
+            }
 
-            if (existingGridLayout != null)
+            // Also remove ContentSizeFitter immediately
+            var existingFitter = buttonContainer.GetComponent<UnityEngine.UI.ContentSizeFitter>();
+            if (existingFitter != null)
             {
-                existingGridLayout.enabled = false;
-                Destroy(existingGridLayout);
-            }
-            if (existingHorizontalLayout != null)
-            {
-                existingHorizontalLayout.enabled = false;
-                Destroy(existingHorizontalLayout);
-            }
-            if (existingVerticalLayout != null)
-            {
-                existingVerticalLayout.enabled = false;
-                Destroy(existingVerticalLayout);
+                DestroyImmediate(existingFitter);
             }
 
             // Apply padding
@@ -258,7 +257,18 @@ namespace RTS.UI
                         gridLayout.spacing = new Vector2(actionConfig.buttonSpacing, actionConfig.buttonSpacing);
                         gridLayout.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
                         gridLayout.constraintCount = actionConfig.gridColumns;
-                        gridLayout.childAlignment = TextAnchor.MiddleCenter; // Center buttons vertically and horizontally
+                        gridLayout.childAlignment = TextAnchor.UpperLeft; // Start from top-left to prevent overlap
+                        gridLayout.startCorner = UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft;
+                        gridLayout.startAxis = UnityEngine.UI.GridLayoutGroup.Axis.Horizontal;
+                        gridLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0); // No extra padding
+                    }
+
+                    // Add ContentSizeFitter to make container size itself to fit buttons
+                    var gridFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
+                    if (gridFitter != null)
+                    {
+                        gridFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+                        gridFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
                     }
                     break;
 
@@ -272,6 +282,15 @@ namespace RTS.UI
                         horizontalLayout.childForceExpandHeight = false;
                         horizontalLayout.childControlWidth = true;
                         horizontalLayout.childControlHeight = true;
+                        horizontalLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0);
+                    }
+
+                    // Add ContentSizeFitter
+                    var horizontalFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
+                    if (horizontalFitter != null)
+                    {
+                        horizontalFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+                        horizontalFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
                     }
                     break;
 
@@ -285,6 +304,15 @@ namespace RTS.UI
                         verticalLayout.childForceExpandHeight = false;
                         verticalLayout.childControlWidth = true;
                         verticalLayout.childControlHeight = true;
+                        verticalLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0);
+                    }
+
+                    // Add ContentSizeFitter
+                    var verticalFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
+                    if (verticalFitter != null)
+                    {
+                        verticalFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+                        verticalFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
                     }
                     break;
             }
@@ -300,23 +328,24 @@ namespace RTS.UI
             {
                 if (child == null) continue;
 
-                // For Grid layout, remove any LayoutElement to let GridLayoutGroup control size
+                // For Grid layout, remove ALL layout-related components to let GridLayoutGroup control everything
                 if (actionConfig.layoutType == RTS.Data.ButtonLayoutType.Grid)
                 {
+                    // Remove LayoutElement if it exists (use DestroyImmediate for immediate cleanup)
                     var layoutElement = child.GetComponent<UnityEngine.UI.LayoutElement>();
                     if (layoutElement != null)
                     {
-                        // Per CLAUDE.md: Avoid DestroyImmediate in runtime
-                        layoutElement.enabled = false;
-                        Destroy(layoutElement);
+                        DestroyImmediate(layoutElement);
                     }
 
-                    // Set RectTransform size directly for Grid (GridLayoutGroup will override anyway)
-                    var rectTransform = child.GetComponent<RectTransform>();
-                    if (rectTransform != null)
+                    // Remove ContentSizeFitter if it exists
+                    var contentFitter = child.GetComponent<UnityEngine.UI.ContentSizeFitter>();
+                    if (contentFitter != null)
                     {
-                        rectTransform.sizeDelta = actionConfig.buttonSize;
+                        DestroyImmediate(contentFitter);
                     }
+
+                    // Don't manually set size - let GridLayoutGroup handle it via cellSize
                 }
                 // For Horizontal and Vertical layouts, use LayoutElement to control button sizes
                 else if (actionConfig.layoutType == RTS.Data.ButtonLayoutType.Horizontal ||
@@ -336,10 +365,28 @@ namespace RTS.UI
                 }
             }
 
-            // Force layout rebuild
+            // Layout rebuild is handled by RebuildLayoutNextFrame() coroutine
+        }
+
+        /// <summary>
+        /// Coroutine to rebuild layout on next frame to prevent button overlap.
+        /// Unity UI layout groups sometimes need a frame to properly calculate positions.
+        /// </summary>
+        private System.Collections.IEnumerator RebuildLayoutNextFrame()
+        {
+            yield return null; // Wait one frame
+
             if (buttonContainer != null)
             {
-                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(buttonContainer.GetComponent<RectTransform>());
+                // Force canvas update
+                Canvas.ForceUpdateCanvases();
+
+                // Rebuild layout
+                var containerRectTransform = buttonContainer.GetComponent<RectTransform>();
+                if (containerRectTransform != null)
+                {
+                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRectTransform);
+                }
             }
         }
 
@@ -400,29 +447,6 @@ namespace RTS.UI
                 else
                 {
                     Destroy(buttonObj);
-                }
-            }
-            
-            // Force layout rebuild after creating buttons
-            if (buttonContainer != null)
-            {
-                // Fix button sizes by adding LayoutElements
-                var layoutFixer = buttonContainer.GetComponent<ButtonLayoutFixer>();
-                if (layoutFixer != null)
-                {
-                    layoutFixer.FixButtonSizes();
-                }
-
-                var containerRect = buttonContainer.GetComponent<RectTransform>();
-                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
-
-                // Log button positions for debugging
-                for (int i = 0; i < buttonContainer.childCount; i++)
-                {
-                    var child = buttonContainer.GetChild(i);
-                    var childRect = child.GetComponent<RectTransform>();
-                    var buttonComponent = child.GetComponent<BuildingActionButton>();
-                    string actionName = buttonComponent != null ? buttonComponent.name : "Unknown";
                 }
             }
         }

@@ -79,6 +79,7 @@ namespace RTS.Data
                     {
                         if (actions[j] != null && actions[i].actionId == actions[j].actionId)
                         {
+                            Debug.LogWarning($"BuildingActionConfig '{name}': Duplicate action ID found: '{actions[i].actionId}' at indices {i} and {j}", this);
                         }
                     }
                 }

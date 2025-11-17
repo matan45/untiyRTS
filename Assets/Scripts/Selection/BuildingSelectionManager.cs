@@ -16,6 +16,12 @@ namespace RTS.Selection
     {
         public static BuildingSelectionManager Instance { get; private set; }
 
+        // Static flag to prevent repeated EventSystem warnings
+        private static bool hasWarnedAboutEventSystem = false;
+
+        // Flag to temporarily block selection after building placement (per CLAUDE.md: event-driven architecture)
+        private bool blockSelectionThisFrame = false;
+
         [Header("Selection Settings")]
         [Tooltip("Layer mask for selectable objects")]
         [SerializeField] private LayerMask selectableLayer = ~0; // All layers by default
@@ -61,6 +67,25 @@ namespace RTS.Selection
             }
 
             SetupInputActions();
+
+            // Subscribe to building placement event (per CLAUDE.md: event-driven architecture)
+            if (BuildingPlacer.Instance != null)
+            {
+                BuildingPlacer.Instance.OnBuildingPlaced += OnBuildingPlaced;
+            }
+        }
+
+        private void OnBuildingPlaced()
+        {
+            // Block selection for one frame after placement to prevent immediate selection
+            blockSelectionThisFrame = true;
+            StartCoroutine(UnblockSelectionNextFrame());
+        }
+
+        private System.Collections.IEnumerator UnblockSelectionNextFrame()
+        {
+            yield return null; // Wait one frame
+            blockSelectionThisFrame = false;
         }
 
         private void SetupInputActions()
@@ -123,6 +148,12 @@ namespace RTS.Selection
                 rightClickAction.performed -= OnRightClick;
             }
 
+            // Unsubscribe from building placement event
+            if (BuildingPlacer.Instance != null)
+            {
+                BuildingPlacer.Instance.OnBuildingPlaced -= OnBuildingPlaced;
+            }
+
             if (Instance == this)
             {
                 Instance = null;
@@ -131,9 +162,14 @@ namespace RTS.Selection
 
         private void OnLeftClick(InputAction.CallbackContext context)
         {
-            // Don't select if currently placing a building or just placed one
-            if (BuildingPlacer.Instance != null &&
-                (BuildingPlacer.Instance.IsPlacing() || BuildingPlacer.Instance.JustPlacedBuilding()))
+            // Don't select if currently placing a building (per CLAUDE.md: event-driven architecture)
+            if (BuildingPlacer.Instance != null && BuildingPlacer.Instance.IsPlacing())
+            {
+                return;
+            }
+
+            // Don't select if a building was just placed this frame
+            if (blockSelectionThisFrame)
             {
                 return;
             }
@@ -152,8 +188,12 @@ namespace RTS.Selection
             // Per CLAUDE.md: Handle edge cases - missing EventSystem should prevent world clicks
             if (EventSystem.current == null)
             {
-                Debug.LogError("BuildingSelectionManager: EventSystem.current is null! UI input detection will not work. " +
-                               "Make sure an EventSystem exists in the scene.");
+                if (!hasWarnedAboutEventSystem)
+                {
+                    Debug.LogError("BuildingSelectionManager: EventSystem.current is null! UI input detection will not work. " +
+                                   "Make sure an EventSystem exists in the scene.");
+                    hasWarnedAboutEventSystem = true;
+                }
                 return true; // Return true to block world clicks when EventSystem is missing
             }
 

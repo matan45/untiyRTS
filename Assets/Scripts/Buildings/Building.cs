@@ -33,6 +33,9 @@ namespace RTS.Buildings
         [Tooltip("Outline width for construction text visibility")]
         [SerializeField] private float constructionTextOutlineWidth = 0.2f;
 
+        [Tooltip("Sorting order for construction text rendering (higher = on top)")]
+        [SerializeField] private int constructionTextSortingOrder = 100;
+
         public BuildingData Data => buildingData;
         public bool IsConstructed { get; private set; }
 
@@ -44,11 +47,29 @@ namespace RTS.Buildings
         private bool isUpgrading = false;
         private float upgradeProgress = 0f;
         private GameObject constructionTextObject;
+        private Coroutine constructionTextUpdateCoroutine;
 
         // Cached references for performance (per CLAUDE.md guidelines)
         private Camera mainCamera;
         private Renderer buildingRenderer;
         private float cachedBuildingHeight;
+
+        void Awake()
+        {
+            // Create construction text early (before Start) so it exists when StartConstruction is called
+            if (constructionText == null)
+            {
+                CreateConstructionText();
+            }
+
+            // Cache references for performance (per CLAUDE.md guidelines - avoid lookups in Update)
+            mainCamera = Camera.main;
+            buildingRenderer = GetComponentInChildren<Renderer>();
+            if (buildingRenderer != null)
+            {
+                cachedBuildingHeight = buildingRenderer.bounds.size.y;
+            }
+        }
 
         void Start()
         {
@@ -69,24 +90,10 @@ namespace RTS.Buildings
                 selectionVisual = GetComponent<SelectionVisualController>();
             }
 
-            // Create construction text if not assigned
-            if (constructionText == null)
-            {
-                CreateConstructionText();
-            }
-
             // Hide construction text initially if building is already constructed
             if (IsConstructed && constructionText != null)
             {
                 constructionText.gameObject.SetActive(false);
-            }
-
-            // Cache references for performance (per CLAUDE.md guidelines - avoid lookups in Update)
-            mainCamera = Camera.main;
-            buildingRenderer = GetComponentInChildren<Renderer>();
-            if (buildingRenderer != null)
-            {
-                cachedBuildingHeight = buildingRenderer.bounds.size.y;
             }
         }
 
@@ -110,19 +117,23 @@ namespace RTS.Buildings
             }
         }
 
-        void Update()
+        /// <summary>
+        /// Coroutine to update construction text position and rotation.
+        /// Only runs when construction text is active (per CLAUDE.md: avoid empty Update loops).
+        /// </summary>
+        private System.Collections.IEnumerator UpdateConstructionTextCoroutine()
         {
-            // Update construction text to face camera and position
-            // Uses cached references for performance (per CLAUDE.md guidelines)
-            if (constructionText != null && constructionText.gameObject.activeSelf && mainCamera != null)
+            while (constructionText != null && constructionText.gameObject.activeSelf && mainCamera != null)
             {
                 // Position text at top of building + offset
-                constructionText.transform.position =
-                    transform.position + Vector3.up * (cachedBuildingHeight + textHeightOffset);
+                Vector3 textPosition = transform.position + Vector3.up * (cachedBuildingHeight + textHeightOffset);
+                constructionText.transform.position = textPosition;
 
                 // Face the camera
                 constructionText.transform.LookAt(mainCamera.transform);
                 constructionText.transform.Rotate(0, 180, 0); // Face the camera properly
+
+                yield return null; // Wait for next frame
             }
         }
 
@@ -157,8 +168,15 @@ namespace RTS.Buildings
             constructionText.outlineWidth = constructionTextOutlineWidth;
             constructionText.outlineColor = Color.black;
 
-            // Set rendering settings
-            constructionText.GetComponent<MeshRenderer>().sortingOrder = 100; // Render on top
+            // Set rendering settings for 3D text (per CLAUDE.md: avoid magic numbers)
+            // Use Overlay render queue to ensure text renders on top of geometry
+            if (constructionText.fontMaterial != null)
+            {
+                constructionText.fontMaterial.renderQueue = 3000 + constructionTextSortingOrder;
+            }
+
+            // Hide text initially - will be shown when construction starts (per CLAUDE.md: event-driven architecture)
+            constructionTextObject.SetActive(false);
         }
 
         private void UpdateConstructionText()
@@ -170,18 +188,36 @@ namespace RTS.Buildings
             {
                 // Show and update text during construction
                 if (!constructionText.gameObject.activeSelf)
+                {
                     constructionText.gameObject.SetActive(true);
+
+                    // Start coroutine to update text position/rotation
+                    if (constructionTextUpdateCoroutine == null)
+                    {
+                        constructionTextUpdateCoroutine = StartCoroutine(UpdateConstructionTextCoroutine());
+                    }
+                }
 
                 // Calculate percentage based on build time
                 float progress = GetConstructionProgress(); // Returns 0-1
                 int percentage = Mathf.RoundToInt(progress * 100f);
                 constructionText.text = $"{percentage}%";
+
             }
             else
             {
                 // Hide text when construction is complete
                 if (constructionText.gameObject.activeSelf)
+                {
                     constructionText.gameObject.SetActive(false);
+
+                    // Stop coroutine when text is hidden
+                    if (constructionTextUpdateCoroutine != null)
+                    {
+                        StopCoroutine(constructionTextUpdateCoroutine);
+                        constructionTextUpdateCoroutine = null;
+                    }
+                }
             }
         }
 
@@ -189,6 +225,9 @@ namespace RTS.Buildings
         {
             IsConstructed = false;
             constructionProgress = 0f;
+
+            // Initialize construction text display and start coroutine
+            UpdateConstructionText();
         }
 
         public void UpdateConstruction(float deltaTime)
@@ -287,6 +326,25 @@ namespace RTS.Buildings
             var actionData = actionConfig.GetAction(actionId);
             if (actionData == null)
                 return false;
+
+            // Validate ResourceManager exists (per CLAUDE.md: defensive programming)
+            if (ResourceManager.Instance == null)
+            {
+                Debug.LogWarning("Building.CanExecuteAction: ResourceManager.Instance is null!");
+                return false;
+            }
+
+            // Check resource costs (except for sell action which grants resources)
+            if (actionId != "sell")
+            {
+                bool canAfford = ResourceManager.Instance.CanAfford(
+                    actionData.creditsCost,
+                    actionData.powerCost
+                );
+
+                if (!canAfford)
+                    return false;
+            }
 
             // Check action-specific requirements
             switch (actionId)

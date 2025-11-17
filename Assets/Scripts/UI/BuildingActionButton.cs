@@ -28,6 +28,7 @@ namespace RTS.UI
 
         private BuildingActionData actionData;
         private IBuildingActions buildingActions;
+        private InputAction hotkeyAction;
 
         private void Awake()
         {
@@ -73,8 +74,52 @@ namespace RTS.UI
                 button.onClick.AddListener(OnButtonClicked);
             }
 
+            // Setup hotkey action (per CLAUDE.md: Use Input System callbacks instead of Update loop)
+            SetupHotkeyAction();
+
             // Update initial state
             UpdateState();
+        }
+
+        private void SetupHotkeyAction()
+        {
+            // Clean up existing action
+            if (hotkeyAction != null)
+            {
+                hotkeyAction.performed -= OnHotkeyPressed;
+                hotkeyAction.Dispose();
+                hotkeyAction = null;
+            }
+
+            // Create new action if hotkey is defined
+            if (actionData != null && actionData.hotkey != Key.None)
+            {
+                hotkeyAction = new InputAction(
+                    name: $"Hotkey_{actionData.actionId}",
+                    binding: $"<Keyboard>/{actionData.hotkey}"
+                );
+                hotkeyAction.performed += OnHotkeyPressed;
+                hotkeyAction.Enable();
+            }
+        }
+
+        private void OnHotkeyPressed(InputAction.CallbackContext context)
+        {
+            if (button != null && button.interactable)
+            {
+                OnButtonClicked();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Clean up input action
+            if (hotkeyAction != null)
+            {
+                hotkeyAction.performed -= OnHotkeyPressed;
+                hotkeyAction.Dispose();
+                hotkeyAction = null;
+            }
         }
 
         private void UpdateUI()
@@ -172,22 +217,6 @@ namespace RTS.UI
             // Execute the action
             buildingActions.ExecuteAction(actionData.actionId);
         }
-
-        private void Update()
-        {
-            // Check for hotkey press
-            if (actionData != null && actionData.hotkey != Key.None)
-            {
-                if (Keyboard.current != null && Keyboard.current[actionData.hotkey].wasPressedThisFrame)
-                {
-                    if (button != null && button.interactable)
-                    {
-                        OnButtonClicked();
-                    }
-                }
-            }
-        }
-        
 
 #if UNITY_EDITOR
         [ContextMenu("Find UI Elements")]
