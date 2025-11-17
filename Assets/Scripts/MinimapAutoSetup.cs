@@ -60,8 +60,6 @@ public class MinimapAutoSetup : MonoBehaviour
             var viewportIndicatorField = type.GetField("viewportIndicator",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (viewportIndicatorField != null) viewportIndicatorField.SetValue(controller, viewportIndicator);
-
-            Debug.Log("[MinimapAutoSetup] MinimapController configured successfully!");
         }
 
         // Setup MinimapSetup

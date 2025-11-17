@@ -26,7 +26,6 @@ public class BuildingActionUISetup : MonoBehaviour
         BuildingActionUIManager uiManager = GetComponent<BuildingActionUIManager>();
         if (uiManager == null)
         {
-            Debug.LogWarning("BuildingActionUISetup: No BuildingActionUIManager found!");
             return;
         }
 
@@ -49,7 +48,6 @@ public class BuildingActionUISetup : MonoBehaviour
             if (buttonContainerField != null)
             {
                 buttonContainerField.SetValue(uiManager, buttonContainer);
-                Debug.Log("Set buttonContainer reference");
             }
         }
 

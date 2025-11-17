@@ -30,12 +30,8 @@ public class AddButtonLayoutFixer
                     container.gameObject.AddComponent<ButtonLayoutFixer>();
                     EditorUtility.SetDirty(container.gameObject);
                     EditorSceneManager.MarkSceneDirty(scene);
-                    Debug.Log("[AddButtonLayoutFixer] ✅ Added ButtonLayoutFixer to ButtonContainer");
                 }
-                else
-                {
-                    Debug.Log("[AddButtonLayoutFixer] ButtonLayoutFixer already exists");
-                }
+                
                 return;
             }
         }

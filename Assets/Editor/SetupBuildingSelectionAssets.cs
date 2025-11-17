@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEditor;
 using System.IO;
 using RTS.Data;
@@ -25,14 +26,10 @@ public class SetupBuildingSelectionAssets
         BuildingActionData upgradeAction = CreateUpgradeAction(actionDataFolder);
         BuildingActionData produceUnitAction = CreateProduceUnitAction(actionDataFolder);
 
-        Debug.Log("✅ Created BuildingActionData assets");
-
         // Create action configs for each building type
         CreatePowerPlantConfig(actionConfigFolder, sellAction, upgradeAction);
         CreateRefineryConfig(actionConfigFolder, sellAction, upgradeAction);
         CreateBarracksConfig(actionConfigFolder, sellAction, upgradeAction, produceUnitAction);
-
-        Debug.Log("✅ Created BuildingActionConfig assets");
 
         // Link configs to BuildingData assets
         LinkActionConfigsToBuildingData();
@@ -42,9 +39,6 @@ public class SetupBuildingSelectionAssets
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-
-        Debug.Log("✅ Building Selection Assets setup complete!");
-        Debug.Log("📋 Next steps:\n1. Assign InputActionAsset to BuildingSelectionManager\n2. Add BuildingActionExecutor to GameManagers\n3. Create UI panel (see BUILDING_SELECTION_SETUP.md)");
     }
 
     private static void CreateFolderIfNeeded(string path)
@@ -62,10 +56,9 @@ public class SetupBuildingSelectionAssets
         BuildingActionData action = ScriptableObject.CreateInstance<BuildingActionData>();
         action.actionId = "sell";
         action.displayName = "Sell Building";
-        action.tooltip = "Sell this building for 50% refund";
         action.creditsCost = 0;
         action.powerCost = 0;
-        action.hotkey = KeyCode.S;
+        action.hotkey = Key.S;
 
         string path = folder + "/Action_Sell.asset";
         AssetDatabase.CreateAsset(action, path);
@@ -77,10 +70,9 @@ public class SetupBuildingSelectionAssets
         BuildingActionData action = ScriptableObject.CreateInstance<BuildingActionData>();
         action.actionId = "upgrade";
         action.displayName = "Upgrade Building";
-        action.tooltip = "Upgrade this building to the next tier";
         action.creditsCost = 0; // Will be set by upgrade data
         action.powerCost = 0;
-        action.hotkey = KeyCode.U;
+        action.hotkey = Key.U;
 
         string path = folder + "/Action_Upgrade.asset";
         AssetDatabase.CreateAsset(action, path);
@@ -92,10 +84,9 @@ public class SetupBuildingSelectionAssets
         BuildingActionData action = ScriptableObject.CreateInstance<BuildingActionData>();
         action.actionId = "produce_unit";
         action.displayName = "Train Unit";
-        action.tooltip = "Train a unit from this building";
         action.creditsCost = 0; // Will be set by unit data
         action.powerCost = 0;
-        action.hotkey = KeyCode.T;
+        action.hotkey = Key.T;
 
         string path = folder + "/Action_ProduceUnit.asset";
         AssetDatabase.CreateAsset(action, path);

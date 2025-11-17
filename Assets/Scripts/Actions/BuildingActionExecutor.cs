@@ -1,7 +1,7 @@
-using UnityEngine;
 using RTS.Buildings;
 using RTS.Interfaces;
 using RTS.Selection;
+using UnityEngine;
 
 namespace RTS.Actions
 {
@@ -42,11 +42,9 @@ namespace RTS.Actions
         {
             if (building == null || string.IsNullOrEmpty(actionId))
             {
-                Debug.LogWarning("BuildingActionExecutor: Invalid building or actionId");
                 return;
             }
 
-            Debug.Log($"Executing action '{actionId}' on {building.GameObject.name}");
 
             switch (actionId)
             {
@@ -68,10 +66,6 @@ namespace RTS.Actions
                     {
                         ExecuteProduceUnit(building, actionId);
                     }
-                    else
-                    {
-                        Debug.LogWarning($"Unknown action ID: {actionId}");
-                    }
                     break;
             }
         }
@@ -82,7 +76,6 @@ namespace RTS.Actions
         {
             if (!building.IsConstructed)
             {
-                Debug.LogWarning("Cannot sell building that is not yet constructed");
                 return;
             }
 
@@ -93,7 +86,6 @@ namespace RTS.Actions
             if (ResourceManager.Instance != null)
             {
                 ResourceManager.Instance.RefundResources(refund, 0);
-                Debug.Log($"Sold {building.GameObject.name} for {refund} credits");
             }
 
             // Deselect if selected
@@ -113,17 +105,10 @@ namespace RTS.Actions
                 if (upgradeable.CanUpgrade())
                 {
                     upgradeable.StartUpgrade();
-                    Debug.Log($"Started upgrade for {building.GameObject.name}");
                 }
-                else
-                {
-                    Debug.LogWarning($"Cannot upgrade {building.GameObject.name} - requirements not met");
-                }
+               
             }
-            else
-            {
-                Debug.LogWarning($"{building.GameObject.name} does not implement IUpgradeable");
-            }
+           
         }
 
         private void ExecuteRepair(Building building)
@@ -131,12 +116,8 @@ namespace RTS.Actions
             if (building is IRepairable repairable)
             {
                 repairable.Repair();
-                Debug.Log($"Repaired {building.GameObject.name}");
             }
-            else
-            {
-                Debug.LogWarning($"{building.GameObject.name} does not implement IRepairable");
-            }
+           
         }
 
         private void ExecuteProduceUnit(Building building, string actionId)
@@ -148,15 +129,10 @@ namespace RTS.Actions
 
                 // In a real implementation, you'd load the UnitData based on unitType
                 // For now, we'll just log it
-                Debug.Log($"Producing unit of type '{unitType}' from {building.GameObject.name}");
 
                 // TODO: Load UnitData asset and call producer.ProduceUnit(unitData)
-                Debug.LogWarning("Unit production not yet fully implemented - needs UnitData asset loading");
             }
-            else
-            {
-                Debug.LogWarning($"{building.GameObject.name} does not implement IUnitProducer");
-            }
+           
         }
 
         #endregion

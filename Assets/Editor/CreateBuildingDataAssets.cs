@@ -67,6 +67,5 @@ public class CreateBuildingDataAssets
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("Created 3 test BuildingData assets in " + folderPath);
     }
 }

@@ -15,7 +15,6 @@ namespace RTS.UI
             
             if (layoutGroup == null)
             {
-                Debug.LogWarning("[ButtonLayoutFixer] No HorizontalLayoutGroup found on " + gameObject.name);
                 return;
             }
 
@@ -30,7 +29,6 @@ namespace RTS.UI
             layoutGroup.childScaleWidth = false;
             layoutGroup.childScaleHeight = false;
 
-            Debug.Log($"[ButtonLayoutFixer] Layout fixed on {gameObject.name}: Spacing={layoutGroup.spacing}, Padding={layoutGroup.padding.left}");
 
             // Force layout rebuild
             LayoutRebuilder.ForceRebuildLayoutImmediate(GetComponent<RectTransform>());
@@ -50,7 +48,6 @@ namespace RTS.UI
                 layoutElement.preferredWidth = 80;
                 layoutElement.preferredHeight = 100;
 
-                Debug.Log($"[ButtonLayoutFixer] Added LayoutElement to {child.name}: {layoutElement.preferredWidth}x{layoutElement.preferredHeight}");
             }
 
             // Force layout rebuild again

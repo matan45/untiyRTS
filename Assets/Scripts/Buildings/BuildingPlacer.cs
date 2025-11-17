@@ -21,12 +21,13 @@ public class BuildingPlacer : MonoBehaviour
     private GameObject ghostObject;
     private bool isPlacing = false;
     private bool isValidPlacement = false;
-    
+    private float lastPlacementTime = -1f;
+
     private Camera mainCamera;
     private InputAction mousePositionAction;
     private InputAction leftClickAction;
     private InputAction cancelAction;
-    
+
     private Material[] originalMaterials;
     
     void Awake()
@@ -266,20 +267,27 @@ public class BuildingPlacer : MonoBehaviour
         {
             Destroy(ghostObject);
         }
-        
+
         ghostObject = null;
         currentBuilding = null;
         isPlacing = false;
         isValidPlacement = false;
-        
+        lastPlacementTime = Time.time;
+
         if (BuildingMenuController.Instance != null)
         {
             BuildingMenuController.Instance.DeselectBuilding();
         }
     }
-    
+
     public bool IsPlacing()
     {
         return isPlacing;
+    }
+
+    public bool JustPlacedBuilding()
+    {
+        // Return true for a short time after placement to prevent immediate selection
+        return Time.time - lastPlacementTime < 0.1f;
     }
 }

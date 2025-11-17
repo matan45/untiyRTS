@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using RTS.UI;
@@ -23,17 +24,13 @@ public class AutoFixActionButton
         // Check if prefab already exists
         if (AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/ActionButtonPrefab.prefab") != null)
         {
-            Debug.Log("[AutoFix] Prefab already exists, skipping...");
             return;
         }
 
-        Debug.Log("[AutoFix] Starting action button fix...");
-
-        // Find ActionButton
+      // Find ActionButton
         GameObject actionButton = GameObject.Find("ActionButton");
         if (actionButton == null)
         {
-            Debug.LogWarning("[AutoFix] ActionButton not found in scene");
             return;
         }
 
@@ -46,7 +43,6 @@ public class AutoFixActionButton
         // Save as prefab
         string prefabPath = "Assets/Prefabs/UI/ActionButtonPrefab.prefab";
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(actionButton, prefabPath);
-        Debug.Log($"[AutoFix] ✅ Created {prefabPath}");
 
         // Find UI Manager and assign prefab
         BuildingActionUIManager uiManager = Object.FindFirstObjectByType<BuildingActionUIManager>();
@@ -56,7 +52,6 @@ public class AutoFixActionButton
             so.FindProperty("actionButtonPrefab").objectReferenceValue = prefab;
             so.ApplyModifiedProperties();
             EditorUtility.SetDirty(uiManager);
-            Debug.Log("[AutoFix] ✅ Assigned prefab to UI Manager");
         }
 
         // Create action data
@@ -66,7 +61,6 @@ public class AutoFixActionButton
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
 
-        Debug.Log("[AutoFix] ✅ ALL DONE! Enter Play Mode and select a building!");
     }
 
     static void CreateData()
@@ -82,8 +76,7 @@ public class AutoFixActionButton
             BuildingActionData sell = ScriptableObject.CreateInstance<BuildingActionData>();
             sell.actionId = "sell";
             sell.displayName = "Sell";
-            sell.tooltip = "Sell building for 50% refund";
-            sell.hotkey = KeyCode.S;
+            sell.hotkey = Key.S;
             AssetDatabase.CreateAsset(sell, sellPath);
             Debug.Log("[AutoFix] Created Sell action");
         }
@@ -94,8 +87,7 @@ public class AutoFixActionButton
             BuildingActionData upgrade = ScriptableObject.CreateInstance<BuildingActionData>();
             upgrade.actionId = "upgrade";
             upgrade.displayName = "Upgrade";
-            upgrade.tooltip = "Upgrade building";
-            upgrade.hotkey = KeyCode.U;
+            upgrade.hotkey = Key.U;
             AssetDatabase.CreateAsset(upgrade, upgradePath);
             Debug.Log("[AutoFix] Created Upgrade action");
         }

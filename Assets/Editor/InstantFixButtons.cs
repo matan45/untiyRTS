@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using RTS.UI;
@@ -9,13 +10,11 @@ public class InstantFixButtons
     [MenuItem("RTS/INSTANT FIX - Create Button Prefab")]
     public static void InstantFix()
     {
-        Debug.Log("Starting instant fix...");
 
         // 1. Find ActionButton in scene
         GameObject actionButton = GameObject.Find("ActionButton");
         if (actionButton == null)
         {
-            Debug.LogError("ActionButton not found! Create it first.");
             return;
         }
 
@@ -28,13 +27,11 @@ public class InstantFixButtons
         // 3. Save as prefab
         string prefabPath = "Assets/Prefabs/UI/ActionButtonPrefab.prefab";
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(actionButton, prefabPath);
-        Debug.Log($"✅ Created prefab at {prefabPath}");
 
         // 4. Find BuildingActionUIManager
         BuildingActionUIManager uiManager = Object.FindFirstObjectByType<BuildingActionUIManager>();
         if (uiManager == null)
         {
-            Debug.LogError("BuildingActionUIManager not found!");
             return;
         }
 
@@ -43,7 +40,6 @@ public class InstantFixButtons
         so.FindProperty("actionButtonPrefab").objectReferenceValue = prefab;
         so.ApplyModifiedProperties();
         EditorUtility.SetDirty(uiManager);
-        Debug.Log("✅ Assigned prefab to BuildingActionUIManager");
 
         // 6. Create action data
         CreateActionDataQuick();
@@ -52,8 +48,6 @@ public class InstantFixButtons
         AssetDatabase.SaveAssets();
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-
-        Debug.Log("✅ DONE! Enter Play Mode and click a building!");
     }
 
     static void CreateActionDataQuick()
@@ -70,19 +64,15 @@ public class InstantFixButtons
         BuildingActionData sell = ScriptableObject.CreateInstance<BuildingActionData>();
         sell.actionId = "sell";
         sell.displayName = "Sell";
-        sell.tooltip = "Sell this building for 50% refund";
-        sell.hotkey = KeyCode.S;
+        sell.hotkey = Key.S;
         AssetDatabase.CreateAsset(sell, "Assets/ScriptableObjects/BuildingActions/Action_Sell.asset");
 
         // Create Upgrade action
         BuildingActionData upgrade = ScriptableObject.CreateInstance<BuildingActionData>();
         upgrade.actionId = "upgrade";
         upgrade.displayName = "Upgrade";
-        upgrade.tooltip = "Upgrade this building";
-        upgrade.hotkey = KeyCode.U;
+        upgrade.hotkey = Key.U;
         AssetDatabase.CreateAsset(upgrade, "Assets/ScriptableObjects/BuildingActions/Action_Upgrade.asset");
-
-        Debug.Log("✅ Created action data");
 
         // Create config for each building
         string[] buildingTypes = { "PowerPlant", "Refinery", "Barracks" };
@@ -101,7 +91,6 @@ public class InstantFixButtons
             {
                 data.actionConfig = config;
                 EditorUtility.SetDirty(data);
-                Debug.Log($"✅ Linked {type} to config");
             }
         }
     }

@@ -63,7 +63,6 @@ public class BuildQueue : MonoBehaviour
     {
         if (queue.Count >= maxQueueSize)
         {
-            Debug.LogWarning("Build queue is full!");
             return false;
         }
         
@@ -82,9 +81,6 @@ public class BuildQueue : MonoBehaviour
         {
             OnBuildingStarted?.Invoke(queuedBuilding);
         }
-        
-        Debug.Log($"Added {data.buildingName} to build queue. Position: {queue.Count}");
-        
         return true;
     }
     
@@ -121,8 +117,6 @@ public class BuildQueue : MonoBehaviour
     
     private void CompleteBuilding(QueuedBuilding queuedBuilding)
     {
-        Debug.Log($"Completed construction of {queuedBuilding.data.buildingName}");
-        
         // Enable the building
         if (queuedBuilding.building != null)
         {
@@ -170,6 +164,5 @@ public class BuildQueue : MonoBehaviour
         queue.RemoveAt(index);
         OnQueueChanged?.Invoke();
         
-        Debug.Log($"Canceled construction of {canceled.data.buildingName}");
     }
 }

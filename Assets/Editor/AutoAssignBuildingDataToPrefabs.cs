@@ -15,7 +15,6 @@ public class AutoAssignBuildingDataToPrefabs
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
-        Debug.Log("[AutoAssign] Checking building prefabs...");
 
         // Map of prefab names to BuildingData asset paths
         var mappings = new (string prefabName, string dataPath)[]
@@ -33,7 +32,6 @@ public class AutoAssignBuildingDataToPrefabs
             string[] guids = AssetDatabase.FindAssets($"{prefabName} t:Prefab");
             if (guids.Length == 0)
             {
-                Debug.LogWarning($"[AutoAssign] Could not find prefab: {prefabName}");
                 continue;
             }
 
@@ -42,7 +40,6 @@ public class AutoAssignBuildingDataToPrefabs
             
             if (prefab == null)
             {
-                Debug.LogWarning($"[AutoAssign] Could not load prefab at: {prefabPath}");
                 continue;
             }
 
@@ -50,7 +47,6 @@ public class AutoAssignBuildingDataToPrefabs
             Building building = prefab.GetComponent<Building>();
             if (building == null)
             {
-                Debug.LogWarning($"[AutoAssign] Prefab {prefabName} has no Building component");
                 continue;
             }
 
@@ -58,7 +54,6 @@ public class AutoAssignBuildingDataToPrefabs
             BuildingData data = AssetDatabase.LoadAssetAtPath<BuildingData>(dataPath);
             if (data == null)
             {
-                Debug.LogWarning($"[AutoAssign] Could not load BuildingData at: {dataPath}");
                 continue;
             }
 
@@ -82,7 +77,6 @@ public class AutoAssignBuildingDataToPrefabs
                 PrefabUtility.SaveAsPrefabAsset(prefabContents, prefabAssetPath);
                 PrefabUtility.UnloadPrefabContents(prefabContents);
 
-                Debug.Log($"[AutoAssign] ✅ Assigned {data.buildingName} data to {prefabName}");
                 anyChanged = true;
             }
         }

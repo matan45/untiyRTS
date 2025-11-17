@@ -14,7 +14,6 @@ public class AssignBuildingDataToMenu
         BuildingMenuController menuController = GameObject.FindFirstObjectByType<BuildingMenuController>();
         if (menuController == null)
         {
-            Debug.LogWarning("[AssignBuildingDataToMenu] BuildingMenuController not found in scene");
             return;
         }
 
@@ -25,7 +24,6 @@ public class AssignBuildingDataToMenu
 
         if (powerPlant == null || refinery == null || barracks == null)
         {
-            Debug.LogWarning("[AssignBuildingDataToMenu] One or more BuildingData assets not found");
             return;
         }
 
@@ -43,11 +41,7 @@ public class AssignBuildingDataToMenu
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             EditorSceneManager.SaveOpenScenes();
 
-            Debug.Log("[AssignBuildingDataToMenu] Successfully assigned 3 BuildingData assets to BuildingMenuController and saved scene");
         }
-        else
-        {
-            Debug.LogError("[AssignBuildingDataToMenu] Could not find availableBuildings field");
-        }
+        
     }
 }

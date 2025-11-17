@@ -39,11 +39,6 @@ public class CanvasScalerSetup : MonoBehaviour
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = referenceResolution;
             scaler.matchWidthOrHeight = matchWidthOrHeight;
-
-            if (Application.isPlaying)
-            {
-                Debug.Log($"[CanvasScalerSetup] Canvas '{gameObject.name}' configured for Scale With Screen Size mode");
-            }
         }
     }
 }

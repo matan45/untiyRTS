@@ -26,7 +26,6 @@ public class AutoAssignBuildingData
             // Check if already assigned
             if (menuController.availableBuildings != null && menuController.availableBuildings.Count > 0)
             {
-                Debug.Log("[AutoAssignBuildingData] BuildingData already assigned");
                 return;
             }
 
@@ -37,7 +36,6 @@ public class AutoAssignBuildingData
 
             if (powerPlant == null || refinery == null || barracks == null)
             {
-                Debug.LogWarning("[AutoAssignBuildingData] Could not load BuildingData assets");
                 return;
             }
 
@@ -49,7 +47,6 @@ public class AutoAssignBuildingData
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
-            Debug.Log("[AutoAssignBuildingData] Assigned 3 BuildingData assets and saved scene");
         };
     }
 }

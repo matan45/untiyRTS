@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace RTS.Data
 {
@@ -21,10 +22,6 @@ namespace RTS.Data
         [Tooltip("Icon displayed on the action button")]
         public Sprite icon;
 
-        [Tooltip("Tooltip text explaining what this action does")]
-        [TextArea(2, 4)]
-        public string tooltip;
-
         [Header("Cost")]
         [Tooltip("Credit cost to perform this action (0 if free or gives resources)")]
         public int creditsCost;
@@ -34,7 +31,7 @@ namespace RTS.Data
 
         [Header("Input")]
         [Tooltip("Keyboard shortcut for this action")]
-        public KeyCode hotkey = KeyCode.None;
+        public Key hotkey = Key.None;
 
         [Header("Visual Feedback")]
         [Tooltip("Color tint for the button (optional)")]
@@ -47,7 +44,6 @@ namespace RTS.Data
         {
             if (string.IsNullOrEmpty(actionId))
             {
-                Debug.LogWarning($"BuildingActionData '{name}' has no actionId assigned!", this);
             }
 
             if (string.IsNullOrEmpty(displayName))

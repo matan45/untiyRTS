@@ -22,26 +22,22 @@ public class LinkBuildingDataAssets
         {
             powerPlant.prefab = powerPlantPrefab;
             EditorUtility.SetDirty(powerPlant);
-            Debug.Log("Linked Power Plant prefab to BuildingData");
         }
 
         if (refinery != null && refineryPrefab != null)
         {
             refinery.prefab = refineryPrefab;
             EditorUtility.SetDirty(refinery);
-            Debug.Log("Linked Refinery prefab to BuildingData");
         }
 
         if (barracks != null && barracksPrefab != null)
         {
             barracks.prefab = barracksPrefab;
             EditorUtility.SetDirty(barracks);
-            Debug.Log("Linked Barracks prefab to BuildingData");
         }
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("All BuildingData assets linked to prefabs!");
     }
 }

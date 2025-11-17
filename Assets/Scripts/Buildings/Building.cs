@@ -1,27 +1,30 @@
-using UnityEngine;
-using RTS.Interfaces;
-using RTS.Data;
-using RTS.Selection;
 using RTS.Actions;
+using RTS.Data;
+using RTS.Interfaces;
+using RTS.Selection;
 using TMPro;
+using UnityEngine;
 
 namespace RTS.Buildings
 {
     public class Building : MonoBehaviour, ISelectable, IBuildingActions, IUpgradeable
     {
-        [Header("Building Configuration")]
-        [SerializeField] private BuildingData buildingData;
+        [Header("Building Configuration")] [SerializeField]
+        private BuildingData buildingData;
+
         [SerializeField] private BuildingActionConfig actionConfig;
 
-        [Header("Upgrade Configuration")]
-        [SerializeField] private BuildingData upgradeData;
+        [Header("Upgrade Configuration")] [SerializeField]
+        private BuildingData upgradeData;
 
-        [Header("Selection Visual")]
-        [SerializeField] private SelectionVisualController selectionVisual;
+        [Header("Selection Visual")] [SerializeField]
+        private SelectionVisualController selectionVisual;
 
         [Header("Construction Display")]
         [Tooltip("3D Text to display construction progress (optional, will be auto-created if not assigned)")]
-        [SerializeField] private TMPro.TextMeshPro constructionText;
+        [SerializeField]
+        private TextMeshPro constructionText;
+
         [SerializeField] private float textHeightOffset = 0.2f;
 
         public BuildingData Data => buildingData;
@@ -35,7 +38,7 @@ namespace RTS.Buildings
         private bool isUpgrading = false;
         private float upgradeProgress = 0f;
         private GameObject constructionTextObject;
-    
+
         void Start()
         {
             // Initialize actionConfig from buildingData if not set
@@ -67,7 +70,7 @@ namespace RTS.Buildings
                 constructionText.gameObject.SetActive(false);
             }
         }
-    
+
         void OnDestroy()
         {
             // Deselect if currently selected
@@ -102,7 +105,8 @@ namespace RTS.Buildings
                 }
 
                 // Position text at top of building + offset
-                constructionText.transform.position = transform.position + Vector3.up * (buildingHeight + textHeightOffset);
+                constructionText.transform.position =
+                    transform.position + Vector3.up * (buildingHeight + textHeightOffset);
 
                 // Face the camera
                 constructionText.transform.LookAt(Camera.main.transform);
@@ -143,8 +147,6 @@ namespace RTS.Buildings
 
             // Set rendering settings
             constructionText.GetComponent<MeshRenderer>().sortingOrder = 100; // Render on top
-
-            Debug.Log($"Created construction text for {gameObject.name}");
         }
 
         private void UpdateConstructionText()
@@ -171,54 +173,54 @@ namespace RTS.Buildings
             }
         }
 
-    public void StartConstruction()
-    {
-        IsConstructed = false;
-        constructionProgress = 0f;
-    }
-    
-    public void UpdateConstruction(float deltaTime)
-    {
-        if (IsConstructed)
-            return;
-
-        if (buildingData != null && buildingData.buildTime > 0)
+        public void StartConstruction()
         {
-            constructionProgress += deltaTime;
+            IsConstructed = false;
+            constructionProgress = 0f;
+        }
 
-            // Update the construction percentage text
-            UpdateConstructionText();
+        public void UpdateConstruction(float deltaTime)
+        {
+            if (IsConstructed)
+                return;
 
-            if (constructionProgress >= buildingData.buildTime)
+            if (buildingData != null && buildingData.buildTime > 0)
             {
-                CompleteConstruction();
+                constructionProgress += deltaTime;
+
+                // Update the construction percentage text
+                UpdateConstructionText();
+
+                if (constructionProgress >= buildingData.buildTime)
+                {
+                    CompleteConstruction();
+                }
             }
         }
-    }
-    
-    public float GetConstructionProgress()
-    {
-        if (buildingData == null || buildingData.buildTime <= 0)
-            return 1f;
-            
-        return Mathf.Clamp01(constructionProgress / buildingData.buildTime);
-    }
-    
-    private void CompleteConstruction()
-    {
-        IsConstructed = true;
-        constructionProgress = buildingData.buildTime;
 
-        // Hide construction text
-        UpdateConstructionText();
-
-        // Add power if this building provides it
-        if (buildingData.providespower && ResourceManager.Instance != null)
+        public float GetConstructionProgress()
         {
-            ResourceManager.Instance.AddPower(buildingData.powerProvided);
+            if (buildingData == null || buildingData.buildTime <= 0)
+                return 1f;
+
+            return Mathf.Clamp01(constructionProgress / buildingData.buildTime);
         }
-    }
-    
+
+        private void CompleteConstruction()
+        {
+            IsConstructed = true;
+            constructionProgress = buildingData.buildTime;
+
+            // Hide construction text
+            UpdateConstructionText();
+
+            // Add power if this building provides it
+            if (buildingData.providespower && ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.AddPower(buildingData.powerProvided);
+            }
+        }
+
         public void SetBuildingData(BuildingData data)
         {
             buildingData = data;
@@ -290,6 +292,7 @@ namespace RTS.Buildings
                     {
                         return upgradeable.CanUpgrade();
                     }
+
                     return false;
 
                 case "repair":
@@ -298,6 +301,7 @@ namespace RTS.Buildings
                     {
                         return repairable.Health < repairable.MaxHealth;
                     }
+
                     return false;
 
                 default:
@@ -309,6 +313,7 @@ namespace RTS.Buildings
                             // Would need UnitData to check properly
                             return IsConstructed;
                         }
+
                         return false;
                     }
 
@@ -321,7 +326,6 @@ namespace RTS.Buildings
         {
             if (!CanExecuteAction(actionId))
             {
-                Debug.LogWarning($"Cannot execute action '{actionId}' on {gameObject.name}");
                 return;
             }
 
@@ -330,10 +334,7 @@ namespace RTS.Buildings
             {
                 BuildingActionExecutor.Instance.ExecuteAction(this, actionId);
             }
-            else
-            {
-                Debug.LogError("BuildingActionExecutor.Instance is null! Cannot execute action.");
-            }
+           
         }
 
         #endregion

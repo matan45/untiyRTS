@@ -20,7 +20,6 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         BuildingMenuController menuController = FindFirstObjectByType<BuildingMenuController>();
         if (menuController == null)
         {
-            Debug.LogWarning("BuildingMenuController not found in scene!");
             return;
         }
         
@@ -57,7 +56,6 @@ public class BuildingMenuAutoSetup : MonoBehaviour
             if (field != null) field.SetValue(menuController, powerText);
         }
         
-        Debug.Log("BuildingMenuController setup complete!");
     }
     
     [ContextMenu("Setup Building Button")]
@@ -66,14 +64,12 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         GameObject buttonObj = GameObject.Find("BuildingButtonPrefab");
         if (buttonObj == null)
         {
-            Debug.LogWarning("BuildingButtonPrefab not found!");
             return;
         }
         
         BuildingButton button = buttonObj.GetComponent<BuildingButton>();
         if (button == null)
         {
-            Debug.LogWarning("BuildingButton component not found!");
             return;
         }
         
@@ -117,6 +113,5 @@ public class BuildingMenuAutoSetup : MonoBehaviour
             if (field != null) field.SetValue(button, btn);
         }
         
-        Debug.Log("BuildingButton setup complete!");
     }
 }

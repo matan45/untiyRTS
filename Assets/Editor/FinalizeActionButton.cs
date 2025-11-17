@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEditor;
 using RTS.UI;
 using RTS.Data;
@@ -29,7 +30,6 @@ public class FinalizeActionButton
         // 3. Save as prefab
         string prefabPath = "Assets/Prefabs/UI/ActionButtonPrefab.prefab";
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(actionButtonObj, prefabPath);
-        Debug.Log("✅ Created ActionButtonPrefab");
 
         // 4. Delete from scene
         GameObject.DestroyImmediate(actionButtonObj);
@@ -42,7 +42,6 @@ public class FinalizeActionButton
             serializedManager.FindProperty("actionButtonPrefab").objectReferenceValue = prefab;
             serializedManager.ApplyModifiedProperties();
             EditorUtility.SetDirty(uiManager);
-            Debug.Log("✅ Linked prefab to BuildingActionUIManager");
         }
 
         // 6. Create action data
@@ -51,7 +50,6 @@ public class FinalizeActionButton
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("✅ All setup complete! Enter Play Mode and select a building!");
     }
 
     private static void CreateActionData()
@@ -78,8 +76,7 @@ public class FinalizeActionButton
             sellAction = ScriptableObject.CreateInstance<BuildingActionData>();
             sellAction.actionId = "sell";
             sellAction.displayName = "Sell";
-            sellAction.tooltip = "Sell this building for 50% refund";
-            sellAction.hotkey = KeyCode.S;
+            sellAction.hotkey = Key.S;
             AssetDatabase.CreateAsset(sellAction, sellPath);
             Debug.Log("Created Sell action");
         }
@@ -92,10 +89,8 @@ public class FinalizeActionButton
             upgradeAction = ScriptableObject.CreateInstance<BuildingActionData>();
             upgradeAction.actionId = "upgrade";
             upgradeAction.displayName = "Upgrade";
-            upgradeAction.tooltip = "Upgrade this building";
-            upgradeAction.hotkey = KeyCode.U;
+            upgradeAction.hotkey = Key.U;
             AssetDatabase.CreateAsset(upgradeAction, upgradePath);
-            Debug.Log("Created Upgrade action");
         }
 
         // Create configs for each building type
@@ -126,7 +121,6 @@ public class FinalizeActionButton
         {
             buildingData.actionConfig = config;
             EditorUtility.SetDirty(buildingData);
-            Debug.Log($"Linked config to {buildingType} BuildingData");
         }
     }
 }

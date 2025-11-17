@@ -14,7 +14,6 @@ public static class QuickAssignBuildings
         BuildingMenuController menuController = Object.FindFirstObjectByType<BuildingMenuController>();
         if (menuController == null)
         {
-            Debug.LogError("BuildingMenuController not found in scene!");
             return;
         }
 
@@ -25,7 +24,6 @@ public static class QuickAssignBuildings
 
         if (powerPlant == null || refinery == null || barracks == null)
         {
-            Debug.LogError("Could not load one or more BuildingData assets!");
             return;
         }
 
@@ -37,6 +35,5 @@ public static class QuickAssignBuildings
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
 
-        Debug.Log("✓ Successfully assigned 3 BuildingData assets to BuildingMenuController and saved scene!");
     }
 }

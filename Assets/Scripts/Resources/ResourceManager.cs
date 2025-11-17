@@ -16,7 +16,6 @@ public class ResourceManager : MonoBehaviour
     public int Credits => currentCredits;
     public int AvailablePower => currentPower - powerUsed;
     public int TotalPower => currentPower;
-    public int PowerUsed => powerUsed;
     
     // Events
     public event Action<int> OnCreditsChanged;

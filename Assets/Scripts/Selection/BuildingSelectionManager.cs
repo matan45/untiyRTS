@@ -1,9 +1,9 @@
 using System;
-using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.EventSystems;
+using System.Collections.Generic;
 using RTS.Interfaces;
-using RTS.Buildings;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 namespace RTS.Selection
 {
@@ -131,8 +131,9 @@ namespace RTS.Selection
 
         private void OnLeftClick(InputAction.CallbackContext context)
         {
-            // Don't select if currently placing a building
-            if (BuildingPlacer.Instance != null && BuildingPlacer.Instance.IsPlacing())
+            // Don't select if currently placing a building or just placed one
+            if (BuildingPlacer.Instance != null &&
+                (BuildingPlacer.Instance.IsPlacing() || BuildingPlacer.Instance.JustPlacedBuilding()))
             {
                 return;
             }
@@ -152,12 +153,12 @@ namespace RTS.Selection
                 return false;
 
             Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();
-            var eventData = new UnityEngine.EventSystems.PointerEventData(EventSystem.current)
+            var eventData = new PointerEventData(EventSystem.current)
             {
                 position = mousePos
             };
 
-            var results = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
 
             return results.Count > 0;

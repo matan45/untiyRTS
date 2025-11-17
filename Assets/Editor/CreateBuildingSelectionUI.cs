@@ -17,7 +17,6 @@ public class CreateBuildingSelectionUI
         Canvas canvas = GameObject.FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
-            Debug.LogError("❌ No Canvas found in scene! Please create a Canvas first.");
             return;
         }
 
@@ -25,7 +24,6 @@ public class CreateBuildingSelectionUI
         Transform existingPanel = canvas.transform.Find("BuildingActionPanel");
         if (existingPanel != null)
         {
-            Debug.LogWarning("⚠️ BuildingActionPanel already exists. Delete it first if you want to recreate.");
             return;
         }
 
@@ -44,9 +42,6 @@ public class CreateBuildingSelectionUI
         // Mark scene dirty
         EditorUtility.SetDirty(canvas.gameObject);
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-
-        Debug.Log("✅ Building Selection UI created successfully!");
-        Debug.Log("📋 Next steps:\n1. Assign ActionButtonPrefab to BuildingActionUIManager\n2. Run 'RTS/Setup Building Selection Assets'\n3. Run 'RTS/Setup Selection Managers'");
 
         // Select the created panel
         Selection.activeGameObject = panel;

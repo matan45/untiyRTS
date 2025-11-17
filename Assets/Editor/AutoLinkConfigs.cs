@@ -25,8 +25,6 @@ public class AutoLinkConfigs
 
         if (!needsLink) return;
 
-        Debug.Log("[AutoLink] Linking action configs...");
-
         // Load configs
         BuildingActionConfig powerPlantConfig = AssetDatabase.LoadAssetAtPath<BuildingActionConfig>("Assets/ScriptableObjects/BuildingActionConfigs/Config_PowerPlant.asset");
         BuildingActionConfig refineryConfig = AssetDatabase.LoadAssetAtPath<BuildingActionConfig>("Assets/ScriptableObjects/BuildingActionConfigs/Config_Refinery.asset");
@@ -46,17 +44,14 @@ public class AutoLinkConfigs
         {
             refinery.actionConfig = refineryConfig;
             EditorUtility.SetDirty(refinery);
-            Debug.Log("[AutoLink] ✅ Linked Refinery");
-        }
+            }
 
         if (barracks != null && barracksConfig != null)
         {
             barracks.actionConfig = barracksConfig;
             EditorUtility.SetDirty(barracks);
-            Debug.Log("[AutoLink] ✅ Linked Barracks");
-        }
+          }
 
         AssetDatabase.SaveAssets();
-        Debug.Log("[AutoLink] ✅ ALL DONE! Enter Play Mode and select a building - you should see buttons now!");
     }
 }

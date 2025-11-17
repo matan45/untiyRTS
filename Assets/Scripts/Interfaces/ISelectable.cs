@@ -9,11 +9,6 @@ namespace RTS.Interfaces
     public interface ISelectable
     {
         /// <summary>
-        /// Gets whether this object is currently selected.
-        /// </summary>
-        bool IsSelected { get; }
-
-        /// <summary>
         /// Gets the GameObject associated with this selectable object.
         /// Useful for accessing transform, renderer, and other components.
         /// </summary>

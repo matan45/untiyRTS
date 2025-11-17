@@ -10,7 +10,6 @@ public static class FinalLinkFix
         LinkConfigs();
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("=== DONE ===");
     }
 
     [UnityEditor.Callbacks.DidReloadScripts]

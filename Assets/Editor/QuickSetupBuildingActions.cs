@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEditor;
 using RTS.Data;
 
@@ -17,20 +18,18 @@ public class QuickSetupBuildingActions
         BuildingActionData sellAction = ScriptableObject.CreateInstance<BuildingActionData>();
         sellAction.actionId = "sell";
         sellAction.displayName = "Sell";
-        sellAction.tooltip = "Sell this building for 50% refund";
         sellAction.creditsCost = 0;
         sellAction.powerCost = 0;
-        sellAction.hotkey = KeyCode.S;
+        sellAction.hotkey = Key.S;
         AssetDatabase.CreateAsset(sellAction, "Assets/ScriptableObjects/BuildingActions/Action_Sell.asset");
 
         // Create Upgrade action
         BuildingActionData upgradeAction = ScriptableObject.CreateInstance<BuildingActionData>();
         upgradeAction.actionId = "upgrade";
         upgradeAction.displayName = "Upgrade";
-        upgradeAction.tooltip = "Upgrade this building";
         upgradeAction.creditsCost = 0;
         upgradeAction.powerCost = 0;
-        upgradeAction.hotkey = KeyCode.U;
+        upgradeAction.hotkey = Key.U;
         AssetDatabase.CreateAsset(upgradeAction, "Assets/ScriptableObjects/BuildingActions/Action_Upgrade.asset");
 
         // Create folder for configs
@@ -86,6 +85,5 @@ public class QuickSetupBuildingActions
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("✅ Building action data created and linked!");
     }
 }

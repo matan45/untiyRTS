@@ -10,7 +10,6 @@ public class TempUISetup
         BuildingActionUIManager uiManager = GameObject.FindFirstObjectByType<BuildingActionUIManager>();
         if (uiManager == null)
         {
-            Debug.LogError("BuildingActionUIManager not found!");
             return;
         }
 
@@ -35,7 +34,5 @@ public class TempUISetup
         
         serializedManager.ApplyModifiedProperties();
         EditorUtility.SetDirty(uiManager);
-        
-        Debug.Log("UI references fixed!");
     }
 }

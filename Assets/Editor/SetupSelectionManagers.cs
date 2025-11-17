@@ -18,7 +18,6 @@ public class SetupSelectionManagers
         GameObject gameManagers = GameObject.Find("GameManagers");
         if (gameManagers == null)
         {
-            Debug.LogError("❌ GameManagers GameObject not found in scene! Please create it first.");
             return;
         }
 
@@ -29,7 +28,6 @@ public class SetupSelectionManagers
         if (selectionManager == null)
         {
             selectionManager = gameManagers.AddComponent<BuildingSelectionManager>();
-            Debug.Log("✅ Added BuildingSelectionManager to GameManagers");
             madeChanges = true;
         }
 
@@ -51,7 +49,6 @@ public class SetupSelectionManagers
             {
                 inputActionsProperty.objectReferenceValue = inputActions;
                 serializedManager.ApplyModifiedProperties();
-                Debug.Log("✅ Assigned RTSInputActions to BuildingSelectionManager");
                 madeChanges = true;
             }
             else

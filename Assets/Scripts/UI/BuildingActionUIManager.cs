@@ -40,13 +40,11 @@ namespace RTS.UI
             if (actionPanel == null)
             {
                 actionPanel = gameObject;
-                Debug.Log("BuildingActionUIManager: Auto-assigned actionPanel to self");
             }
 
             if (buttonContainer == null)
             {
                 buttonContainer = transform.Find("ButtonContainer");
-                Debug.Log("BuildingActionUIManager: Auto-found ButtonContainer");
             }
 
             // Ensure ButtonLayoutFixer is attached
@@ -56,7 +54,6 @@ namespace RTS.UI
                 if (layoutFixer == null)
                 {
                     layoutFixer = buttonContainer.gameObject.AddComponent<ButtonLayoutFixer>();
-                    Debug.Log("BuildingActionUIManager: Added ButtonLayoutFixer to ButtonContainer");
                 }
             }
 
@@ -168,32 +165,27 @@ namespace RTS.UI
         {
             if (currentBuildingActions == null)
             {
-                Debug.LogError("BuildingActionUIManager: currentBuildingActions is null!");
                 return;
             }
 
             if (buttonContainer == null)
             {
-                Debug.LogError("BuildingActionUIManager: buttonContainer is null!");
                 return;
             }
 
             if (actionButtonPrefab == null)
             {
-                Debug.LogError("BuildingActionUIManager: actionButtonPrefab is not assigned!");
                 return;
             }
 
             var actionConfig = currentBuildingActions.GetActionConfig();
             if (actionConfig == null)
             {
-                Debug.LogWarning($"Building {currentBuilding.GameObject.name} has null actionConfig!");
                 return;
             }
 
             if (actionConfig.actions == null || actionConfig.actions.Length == 0)
             {
-                Debug.LogWarning($"Building {currentBuilding.GameObject.name} has no actions configured");
                 return;
             }
 
@@ -212,13 +204,10 @@ namespace RTS.UI
                 }
                 else
                 {
-                    Debug.LogWarning("Action button prefab does not have BuildingActionButton component!");
                     Destroy(buttonObj);
                 }
             }
-
-            Debug.Log($"Created {activeButtons.Count} action buttons for {currentBuilding.GameObject.name}");
-
+            
             // Force layout rebuild after creating buttons
             if (buttonContainer != null)
             {
@@ -231,17 +220,14 @@ namespace RTS.UI
 
                 var containerRect = buttonContainer.GetComponent<RectTransform>();
                 UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
-                Debug.Log("Forced layout rebuild on ButtonContainer");
 
                 // Log button positions for debugging
-                Debug.Log($"ButtonContainer size: {containerRect.rect.size}, position: {containerRect.anchoredPosition}");
                 for (int i = 0; i < buttonContainer.childCount; i++)
                 {
                     var child = buttonContainer.GetChild(i);
                     var childRect = child.GetComponent<RectTransform>();
                     var buttonComponent = child.GetComponent<BuildingActionButton>();
                     string actionName = buttonComponent != null ? buttonComponent.name : "Unknown";
-                    Debug.Log($"  Button {i} [{actionName}]: position={childRect.anchoredPosition}, size={childRect.rect.size}, anchors=({childRect.anchorMin}, {childRect.anchorMax})");
                 }
             }
         }

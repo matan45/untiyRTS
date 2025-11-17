@@ -13,13 +13,6 @@ namespace RTS.Data
         [Tooltip("Display name of the unit")]
         public string unitName;
 
-        [Tooltip("Description of the unit and its capabilities")]
-        [TextArea(2, 4)]
-        public string description;
-
-        [Tooltip("Icon displayed in production UI")]
-        public Sprite icon;
-
         [Header("Prefab")]
         [Tooltip("Unit prefab to spawn when production completes")]
         public GameObject prefab;
@@ -38,18 +31,7 @@ namespace RTS.Data
         [Tooltip("Buildings required before this unit can be produced")]
         public BuildingData[] requiredBuildings;
 
-        [Tooltip("Minimum tech level required to produce this unit")]
-        public int techLevel = 1;
-
-        [Header("Input")]
-        [Tooltip("Keyboard shortcut for producing this unit")]
-        public KeyCode hotkey = KeyCode.None;
-
-        /// <summary>
-        /// Checks if all prerequisite buildings exist.
-        /// </summary>
-        /// <param name="buildingManager">Reference to the building manager to check buildings</param>
-        /// <returns>True if all prerequisites are met</returns>
+      
         public bool HasPrerequisites(Buildings.BuildingManager buildingManager)
         {
             if (requiredBuildings == null || requiredBuildings.Length == 0)
