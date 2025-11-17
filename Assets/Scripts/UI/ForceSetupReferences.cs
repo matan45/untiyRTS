@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Reflection;
+using RTS.Data;
+using RTS.Buildings;
 
 public class ForceSetupReferences : MonoBehaviour
 {

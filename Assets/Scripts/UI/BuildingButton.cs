@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using RTS.Data;
+using RTS.Buildings;
 
 public class BuildingButton : MonoBehaviour
 {

@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using RTS.Data;
+using RTS.Buildings;
 
 [System.Serializable]
 public class QueuedBuilding

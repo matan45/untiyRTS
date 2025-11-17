@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using RTS.Data;
 
 public class BuildingMenuController : MonoBehaviour
 {

@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using RTS.Data;
 
 [InitializeOnLoad]
 public class AutoAssignBuildingData

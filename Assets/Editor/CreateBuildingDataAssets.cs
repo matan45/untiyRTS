@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using RTS.Data;
 
 public class CreateBuildingDataAssets
 {

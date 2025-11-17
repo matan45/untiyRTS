@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.Collections.Generic;
+using RTS.Data;
 
 // Quick menu item to assign BuildingData assets
 public static class QuickAssignBuildings

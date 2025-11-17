@@ -1,8 +1,11 @@
 using UnityEngine;
+using RTS.Data;
 
-[CreateAssetMenu(fileName = "New Building", menuName = "RTS/Building Data")]
-public class BuildingData : ScriptableObject
+namespace RTS.Data
 {
+    [CreateAssetMenu(fileName = "New Building", menuName = "RTS/Building Data")]
+    public class BuildingData : ScriptableObject
+    {
     [Header("Building Info")]
     public string buildingName;
     public string description;
@@ -26,18 +29,23 @@ public class BuildingData : ScriptableObject
     public bool canProduceUnits = false;
     public bool providespower = false;
     public int powerProvided = 0;
+
+    [Header("Actions")]
+    [Tooltip("Configuration for building actions (sell, upgrade, unit production, etc.)")]
+    public BuildingActionConfig actionConfig;
     
-    public bool HasPrerequisites(BuildingManager buildingManager)
-    {
-        if (requiredBuildings == null || requiredBuildings.Length == 0)
-            return true;
-            
-        foreach (var required in requiredBuildings)
+        public bool HasPrerequisites(Buildings.BuildingManager buildingManager)
         {
-            if (!buildingManager.HasBuilding(required))
-                return false;
+            if (requiredBuildings == null || requiredBuildings.Length == 0)
+                return true;
+
+            foreach (var required in requiredBuildings)
+            {
+                if (!buildingManager.HasBuilding(required))
+                    return false;
+            }
+
+            return true;
         }
-        
-        return true;
     }
 }

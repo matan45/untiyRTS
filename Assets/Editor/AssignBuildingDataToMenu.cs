@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using RTS.Data;
 
 // Auto-assigns BuildingData assets to BuildingMenuController
 public class AssignBuildingDataToMenu
