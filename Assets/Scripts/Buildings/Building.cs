@@ -3,6 +3,7 @@ using RTS.Interfaces;
 using RTS.Data;
 using RTS.Selection;
 using RTS.Actions;
+using TMPro;
 
 namespace RTS.Buildings
 {
@@ -18,6 +19,11 @@ namespace RTS.Buildings
         [Header("Selection Visual")]
         [SerializeField] private SelectionVisualController selectionVisual;
 
+        [Header("Construction Display")]
+        [Tooltip("3D Text to display construction progress (optional, will be auto-created if not assigned)")]
+        [SerializeField] private TMPro.TextMeshPro constructionText;
+        [SerializeField] private float textHeightOffset = 0.2f;
+
         public BuildingData Data => buildingData;
         public bool IsConstructed { get; private set; }
 
@@ -28,6 +34,7 @@ namespace RTS.Buildings
         private float constructionProgress = 0f;
         private bool isUpgrading = false;
         private float upgradeProgress = 0f;
+        private GameObject constructionTextObject;
     
         void Start()
         {
@@ -47,6 +54,18 @@ namespace RTS.Buildings
             {
                 selectionVisual = GetComponent<SelectionVisualController>();
             }
+
+            // Create construction text if not assigned
+            if (constructionText == null)
+            {
+                CreateConstructionText();
+            }
+
+            // Hide construction text initially if building is already constructed
+            if (IsConstructed && constructionText != null)
+            {
+                constructionText.gameObject.SetActive(false);
+            }
         }
     
         void OnDestroy()
@@ -61,8 +80,97 @@ namespace RTS.Buildings
             {
                 BuildingManager.Instance.UnregisterBuilding(this);
             }
+
+            // Clean up construction text if it was auto-created
+            if (constructionTextObject != null)
+            {
+                Destroy(constructionTextObject);
+            }
         }
-    
+
+        void Update()
+        {
+            // Update construction text to face camera and position
+            if (constructionText != null && constructionText.gameObject.activeSelf && Camera.main != null)
+            {
+                // Get building height from renderer bounds
+                float buildingHeight = 0f;
+                var renderer = GetComponentInChildren<Renderer>();
+                if (renderer != null)
+                {
+                    buildingHeight = renderer.bounds.size.y;
+                }
+
+                // Position text at top of building + offset
+                constructionText.transform.position = transform.position + Vector3.up * (buildingHeight + textHeightOffset);
+
+                // Face the camera
+                constructionText.transform.LookAt(Camera.main.transform);
+                constructionText.transform.Rotate(0, 180, 0); // Face the camera properly
+            }
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Update text position in editor when textHeightOffset changes
+            if (constructionText != null && Application.isPlaying)
+            {
+                // Position will be updated in Update() method
+            }
+        }
+#endif
+
+        private void CreateConstructionText()
+        {
+            // Create a new GameObject for the 3D text
+            constructionTextObject = new GameObject("ConstructionText");
+            constructionTextObject.transform.SetParent(transform);
+            constructionTextObject.transform.localPosition = Vector3.up * textHeightOffset;
+
+            // Add TextMeshPro component
+            constructionText = constructionTextObject.AddComponent<TextMeshPro>();
+
+            // Configure text appearance
+            constructionText.fontSize = 3;
+            constructionText.alignment = TextAlignmentOptions.Center;
+            constructionText.color = Color.yellow;
+            constructionText.text = "0%";
+
+            // Add outline for better visibility
+            constructionText.outlineWidth = 0.2f;
+            constructionText.outlineColor = Color.black;
+
+            // Set rendering settings
+            constructionText.GetComponent<MeshRenderer>().sortingOrder = 100; // Render on top
+
+            Debug.Log($"Created construction text for {gameObject.name}");
+        }
+
+        private void UpdateConstructionText()
+        {
+            if (constructionText == null)
+                return;
+
+            if (!IsConstructed)
+            {
+                // Show and update text during construction
+                if (!constructionText.gameObject.activeSelf)
+                    constructionText.gameObject.SetActive(true);
+
+                // Calculate percentage based on build time
+                float progress = GetConstructionProgress(); // Returns 0-1
+                int percentage = Mathf.RoundToInt(progress * 100f);
+                constructionText.text = $"{percentage}%";
+            }
+            else
+            {
+                // Hide text when construction is complete
+                if (constructionText.gameObject.activeSelf)
+                    constructionText.gameObject.SetActive(false);
+            }
+        }
+
     public void StartConstruction()
     {
         IsConstructed = false;
@@ -73,11 +181,14 @@ namespace RTS.Buildings
     {
         if (IsConstructed)
             return;
-            
+
         if (buildingData != null && buildingData.buildTime > 0)
         {
             constructionProgress += deltaTime;
-            
+
+            // Update the construction percentage text
+            UpdateConstructionText();
+
             if (constructionProgress >= buildingData.buildTime)
             {
                 CompleteConstruction();
@@ -97,7 +208,10 @@ namespace RTS.Buildings
     {
         IsConstructed = true;
         constructionProgress = buildingData.buildTime;
-        
+
+        // Hide construction text
+        UpdateConstructionText();
+
         // Add power if this building provides it
         if (buildingData.providespower && ResourceManager.Instance != null)
         {

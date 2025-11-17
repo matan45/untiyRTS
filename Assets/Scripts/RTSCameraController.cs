@@ -6,7 +6,7 @@ public class RTSCameraController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float panSpeed = 20f;
     [SerializeField] private float panBorderThickness = 10f;
-    [SerializeField] private bool useEdgeScrolling = true;
+    [SerializeField] private bool useEdgeScrolling = false;
 
     [Header("Zoom Settings")]
     [SerializeField] private float zoomSpeed = 10f;

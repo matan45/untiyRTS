@@ -102,10 +102,19 @@ namespace RTS.UI
             // Check if the selected object is a building with actions
             if (selectable is Building building && building is IBuildingActions buildingActions)
             {
-                currentBuilding = building;
-                currentBuildingActions = buildingActions;
+                // Only show action panel if building is fully constructed
+                if (building.IsConstructed)
+                {
+                    currentBuilding = building;
+                    currentBuildingActions = buildingActions;
 
-                ShowActionPanel();
+                    ShowActionPanel();
+                }
+                else
+                {
+                    // Building is still under construction - don't show action panel
+                    HideActionPanel();
+                }
             }
             else
             {
