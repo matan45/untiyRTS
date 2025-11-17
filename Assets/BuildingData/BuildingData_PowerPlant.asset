@@ -26,3 +26,4 @@ MonoBehaviour:
   canProduceUnits: 0
   providespower: 1
   powerProvided: 100
+  actionConfig: {fileID: 11400000, guid: 9a7d97ef2c893fd4d88d269fd1ab6ed5, type: 2}

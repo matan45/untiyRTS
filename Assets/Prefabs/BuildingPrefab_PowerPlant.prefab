@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 435534976969529138}
   - component: {fileID: 5643365709516034504}
   - component: {fileID: 6423031367116735406}
+  - component: {fileID: -8952601955082785671}
   m_Layer: 0
   m_Name: BuildingPrefab_PowerPlant
   m_TagString: Untagged
@@ -124,4 +125,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a50c8b7ccdb24c4fb84b1dc9cb9a855, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Building
-  buildingData: {fileID: 0}
+  buildingData: {fileID: 11400000, guid: bea76d4301b63d842b387558719c65da, type: 2}
+  actionConfig: {fileID: 11400000, guid: 9a7d97ef2c893fd4d88d269fd1ab6ed5, type: 2}
+  selectionVisual: {fileID: 0}
+--- !u!114 &-8952601955082785671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567714926778410317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dced473160f5dd45b786da71979ac47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Selection.SelectionVisualController
+  defaultOutlineColor: {r: 0, g: 1, b: 0, a: 1}
+  defaultOutlineWidth: 3
+  targetRenderers: []

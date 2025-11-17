@@ -16,11 +16,11 @@ public class ResourceManager : MonoBehaviour
     public int Credits => currentCredits;
     public int AvailablePower => currentPower - powerUsed;
     public int TotalPower => currentPower;
-    public int PowerUsed => powerUsed;
     
     // Events
     public event Action<int> OnCreditsChanged;
     public event Action<int, int> OnPowerChanged; // available, total
+    public event Action OnResourcesChanged; // Combined event for any resource change (per CLAUDE.md event-driven architecture)
     
     void Awake()
     {
@@ -40,9 +40,10 @@ public class ResourceManager : MonoBehaviour
         currentCredits = startingCredits;
         currentPower = startingPower;
         powerUsed = 0;
-        
+
         OnCreditsChanged?.Invoke(currentCredits);
         OnPowerChanged?.Invoke(AvailablePower, currentPower);
+        OnResourcesChanged?.Invoke();
     }
     
     public bool CanAfford(int credits, int power = 0)
@@ -54,13 +55,14 @@ public class ResourceManager : MonoBehaviour
     {
         if (!CanAfford(credits, power))
             return false;
-            
+
         currentCredits -= credits;
         powerUsed += power;
-        
+
         OnCreditsChanged?.Invoke(currentCredits);
         OnPowerChanged?.Invoke(AvailablePower, currentPower);
-        
+        OnResourcesChanged?.Invoke();
+
         return true;
     }
     
@@ -68,20 +70,23 @@ public class ResourceManager : MonoBehaviour
     {
         currentCredits += amount;
         OnCreditsChanged?.Invoke(currentCredits);
+        OnResourcesChanged?.Invoke();
     }
     
     public void AddPower(int amount)
     {
         currentPower += amount;
         OnPowerChanged?.Invoke(AvailablePower, currentPower);
+        OnResourcesChanged?.Invoke();
     }
     
     public void RefundResources(int credits, int power = 0)
     {
         currentCredits += credits;
         powerUsed -= power;
-        
+
         OnCreditsChanged?.Invoke(currentCredits);
         OnPowerChanged?.Invoke(AvailablePower, currentPower);
+        OnResourcesChanged?.Invoke();
     }
 }

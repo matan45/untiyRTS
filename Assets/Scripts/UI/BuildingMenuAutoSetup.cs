@@ -12,7 +12,7 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         SetupBuildingMenu();
         SetupBuildingButton();
     }
-    
+
     [ContextMenu("Setup Building Menu")]
     void SetupBuildingMenu()
     {
@@ -20,10 +20,9 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         BuildingMenuController menuController = FindFirstObjectByType<BuildingMenuController>();
         if (menuController == null)
         {
-            Debug.LogWarning("BuildingMenuController not found in scene!");
             return;
         }
-        
+
         // Find UI elements
         Transform content = GameObject.Find("Content")?.transform;
         GameObject buttonPrefab = GameObject.Find("BuildingButtonPrefab");
@@ -32,32 +31,50 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         
         // Use reflection to set private fields
         var type = typeof(BuildingMenuController);
-        
+
         if (content != null)
         {
             var field = type.GetField("buildingButtonContainer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, content);
+            if (field != null)
+            {
+                field.SetValue(menuController, content);
+            }
         }
-        
+
         if (buttonPrefab != null)
         {
             var field = type.GetField("buildingButtonPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, buttonPrefab);
+            if (field != null)
+            {
+                field.SetValue(menuController, buttonPrefab);
+            }
         }
-        
+
         if (creditsText != null)
         {
             var field = type.GetField("creditsText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, creditsText);
+            if (field != null)
+            {
+                field.SetValue(menuController, creditsText);
+            }
         }
-        
+
         if (powerText != null)
         {
             var field = type.GetField("powerText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(menuController, powerText);
+            if (field != null)
+            {
+                field.SetValue(menuController, powerText);
+            }
         }
-        
-        Debug.Log("BuildingMenuController setup complete!");
+
+        // Re-initialize buttons now that references are set
+        // Use reflection to call the private InitializeButtons method
+        var initMethod = type.GetMethod("InitializeButtons", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (initMethod != null)
+        {
+            initMethod.Invoke(menuController, null);
+        }
     }
     
     [ContextMenu("Setup Building Button")]
@@ -66,14 +83,12 @@ public class BuildingMenuAutoSetup : MonoBehaviour
         GameObject buttonObj = GameObject.Find("BuildingButtonPrefab");
         if (buttonObj == null)
         {
-            Debug.LogWarning("BuildingButtonPrefab not found!");
             return;
         }
         
         BuildingButton button = buttonObj.GetComponent<BuildingButton>();
         if (button == null)
         {
-            Debug.LogWarning("BuildingButton component not found!");
             return;
         }
         
@@ -117,6 +132,5 @@ public class BuildingMenuAutoSetup : MonoBehaviour
             if (field != null) field.SetValue(button, btn);
         }
         
-        Debug.Log("BuildingButton setup complete!");
     }
 }

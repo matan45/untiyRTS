@@ -6,7 +6,7 @@ public class RTSCameraController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float panSpeed = 20f;
     [SerializeField] private float panBorderThickness = 10f;
-    [SerializeField] private bool useEdgeScrolling = true;
+    [SerializeField] private bool useEdgeScrolling = false;
 
     [Header("Zoom Settings")]
     [SerializeField] private float zoomSpeed = 10f;
@@ -35,24 +35,45 @@ public class RTSCameraController : MonoBehaviour
     private InputAction mousePositionAction;
     private InputAction middleMouseDragAction;
 
+    void Awake()
+    {
+        // Initialize camera position BEFORE first Update
+        currentPosition = transform.position;
+        currentZoom = transform.position.y;
+
+        // Setup input actions early
+        if (inputActions != null)
+        {
+            var cameraMap = inputActions.FindActionMap("Camera");
+            if (cameraMap != null)
+            {
+                movementAction = cameraMap.FindAction("Movement");
+                rotateAction = cameraMap.FindAction("Rotate");
+                zoomAction = cameraMap.FindAction("Zoom");
+                mousePositionAction = cameraMap.FindAction("MousePosition");
+                middleMouseDragAction = cameraMap.FindAction("MiddleMouseDrag");
+            }
+        }
+    }
+
     void OnEnable()
     {
-        // Get the Camera action map
-        var cameraMap = inputActions.FindActionMap("Camera");
+        if (inputActions != null)
+        {
+            // Enable all actions
+            var cameraMap = inputActions.FindActionMap("Camera");
+            if (cameraMap != null)
+            {
+                cameraMap.Enable();
+            }
 
-        // Get individual actions
-        movementAction = cameraMap.FindAction("Movement");
-        rotateAction = cameraMap.FindAction("Rotate");
-        zoomAction = cameraMap.FindAction("Zoom");
-        mousePositionAction = cameraMap.FindAction("MousePosition");
-        middleMouseDragAction = cameraMap.FindAction("MiddleMouseDrag");
-
-        // Enable all actions
-        cameraMap.Enable();
-
-        // Subscribe to middle mouse button events
-        middleMouseDragAction.started += OnMiddleMouseStart;
-        middleMouseDragAction.canceled += OnMiddleMouseEnd;
+            // Subscribe to middle mouse button events
+            if (middleMouseDragAction != null)
+            {
+                middleMouseDragAction.started += OnMiddleMouseStart;
+                middleMouseDragAction.canceled += OnMiddleMouseEnd;
+            }
+        }
     }
 
     void OnDisable()
@@ -63,12 +84,6 @@ public class RTSCameraController : MonoBehaviour
 
         // Disable all actions
         inputActions.FindActionMap("Camera").Disable();
-    }
-
-    void Start()
-    {
-        currentPosition = transform.position;
-        currentZoom = transform.position.y;
     }
 
     void Update()
@@ -85,6 +100,8 @@ public class RTSCameraController : MonoBehaviour
 
     void HandleKeyboardMovement()
     {
+        if (movementAction == null) return;
+
         Vector2 inputVector = movementAction.ReadValue<Vector2>();
 
         if (inputVector.sqrMagnitude > 0)
@@ -97,9 +114,13 @@ public class RTSCameraController : MonoBehaviour
 
     void HandleMouseEdgeScrolling()
     {
-        if (!useEdgeScrolling) return;
+        if (!useEdgeScrolling || mousePositionAction == null) return;
 
         Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();
+
+        // Ignore (0,0) which is the initial mouse position before first movement
+        if (mousePos.x == 0 && mousePos.y == 0) return;
+
         Vector3 move = Vector3.zero;
 
         // Edge scrolling
@@ -112,13 +133,16 @@ public class RTSCameraController : MonoBehaviour
         if (mousePos.y <= panBorderThickness)
             move -= transform.forward;
 
-        move.y = 0;
-        currentPosition += move.normalized * panSpeed * Time.deltaTime;
+        if (move.sqrMagnitude > 0)
+        {
+            move.y = 0;
+            currentPosition += move.normalized * panSpeed * Time.deltaTime;
+        }
     }
 
     void HandleMouseDragPan()
     {
-        if (isDragging)
+        if (isDragging && mousePositionAction != null)
         {
             Vector2 currentMousePos = mousePositionAction.ReadValue<Vector2>();
             Vector2 delta = currentMousePos - lastMousePosition;
@@ -131,6 +155,8 @@ public class RTSCameraController : MonoBehaviour
 
     void HandleZoom()
     {
+        if (zoomAction == null) return;
+
         float scroll = zoomAction.ReadValue<float>();
         currentZoom -= scroll * zoomSpeed * 0.1f; // Scaled down for better feel
         currentZoom = Mathf.Clamp(currentZoom, minZoom, maxZoom);
@@ -138,6 +164,8 @@ public class RTSCameraController : MonoBehaviour
 
     void HandleRotation()
     {
+        if (rotateAction == null) return;
+
         float rotateInput = rotateAction.ReadValue<float>();
         if (Mathf.Abs(rotateInput) > 0.01f)
         {

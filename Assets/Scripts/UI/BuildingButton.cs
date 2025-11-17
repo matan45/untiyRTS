@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using RTS.Data;
+using RTS.Buildings;
 
 public class BuildingButton : MonoBehaviour
 {
@@ -17,10 +19,24 @@ public class BuildingButton : MonoBehaviour
     
     void Awake()
     {
+        // Auto-wire references if not set
         if (button == null)
             button = GetComponent<Button>();
-            
-        button.onClick.AddListener(OnButtonClicked);
+
+        if (iconImage == null)
+            iconImage = transform.Find("Icon")?.GetComponent<Image>();
+
+        if (nameText == null)
+            nameText = transform.Find("NameText")?.GetComponent<TextMeshProUGUI>();
+
+        if (costText == null)
+            costText = transform.Find("CostText")?.GetComponent<TextMeshProUGUI>();
+
+        if (lockOverlay == null)
+            lockOverlay = transform.Find("LockOverlay")?.GetComponent<Image>();
+
+        if (button != null)
+            button.onClick.AddListener(OnButtonClicked);
     }
     
     public void Initialize(BuildingData data)

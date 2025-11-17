@@ -1,8 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
+using RTS.Data;
 
-public class BuildingManager : MonoBehaviour
+namespace RTS.Buildings
 {
+    public class BuildingManager : MonoBehaviour
+    {
     public static BuildingManager Instance { get; private set; }
     
     private List<Building> placedBuildings = new List<Building>();
@@ -61,8 +64,9 @@ public class BuildingManager : MonoBehaviour
         return buildingCounts.ContainsKey(data) ? buildingCounts[data] : 0;
     }
     
-    public List<Building> GetAllBuildings()
-    {
-        return new List<Building>(placedBuildings);
+        public List<Building> GetAllBuildings()
+        {
+            return new List<Building>(placedBuildings);
+        }
     }
 }
