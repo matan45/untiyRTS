@@ -228,8 +228,6 @@ namespace RTS.Selection
 
             // Notify listeners
             OnSelectionChanged?.Invoke(currentSelection);
-
-            Debug.Log($"Selected: {selectable.GameObject.name}");
         }
 
         /// <summary>
@@ -245,8 +243,6 @@ namespace RTS.Selection
 
             // Notify listeners
             OnSelectionCleared?.Invoke();
-
-            Debug.Log("Selection cleared");
         }
 
         /// <summary>

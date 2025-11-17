@@ -37,7 +37,6 @@ public class BuildingActionUISetup : MonoBehaviour
         if (actionPanelField != null)
         {
             actionPanelField.SetValue(uiManager, gameObject);
-            Debug.Log("Set actionPanel reference");
         }
 
         // Find and set buttonContainer
@@ -59,7 +58,6 @@ public class BuildingActionUISetup : MonoBehaviour
             if (infoDisplayField != null)
             {
                 infoDisplayField.SetValue(uiManager, infoDisplay);
-                Debug.Log("Set infoDisplay reference");
             }
         }
 

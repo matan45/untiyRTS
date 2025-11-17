@@ -44,22 +44,28 @@ public class MinimapSetup : MonoBehaviour
     {
         if (minimapCamera == null || minimapDisplay == null)
             return;
-        
+
         // Create or recreate render texture
         if (minimapRenderTexture == null || minimapRenderTexture.width != textureSize)
         {
             if (minimapRenderTexture != null)
             {
+                // Clear references before destroying
+                if (minimapCamera != null)
+                    minimapCamera.targetTexture = null;
+                if (minimapDisplay != null)
+                    minimapDisplay.texture = null;
+
                 if (Application.isPlaying)
                     Destroy(minimapRenderTexture);
                 else
                     DestroyImmediate(minimapRenderTexture);
             }
-            
+
             minimapRenderTexture = new RenderTexture(textureSize, textureSize, 16);
             minimapRenderTexture.name = "MinimapRT";
         }
-        
+
         // Assign to camera and UI
         minimapCamera.targetTexture = minimapRenderTexture;
         minimapDisplay.texture = minimapRenderTexture;
@@ -69,6 +75,12 @@ public class MinimapSetup : MonoBehaviour
     {
         if (minimapRenderTexture != null)
         {
+            // Clear references before destroying to avoid warnings
+            if (minimapCamera != null)
+                minimapCamera.targetTexture = null;
+            if (minimapDisplay != null)
+                minimapDisplay.texture = null;
+
             if (Application.isPlaying)
                 Destroy(minimapRenderTexture);
             else

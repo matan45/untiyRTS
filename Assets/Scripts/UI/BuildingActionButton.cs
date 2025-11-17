@@ -125,7 +125,7 @@ namespace RTS.UI
                     if (actionData.powerCost > 0)
                     {
                         if (costString.Length > 0) costString += " ";
-                        costString += $"⚡{actionData.powerCost}";
+                        costString += $"P:{actionData.powerCost}";
                     }
 
                     costText.text = costString;
@@ -171,8 +171,6 @@ namespace RTS.UI
 
             // Execute the action
             buildingActions.ExecuteAction(actionData.actionId);
-
-            Debug.Log($"Executed action: {actionData.displayName}");
         }
 
         private void Update()

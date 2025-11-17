@@ -975,7 +975,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CanvasScalerSetup
   referenceResolution: {x: 1920, y: 1080}
   matchWidthOrHeight: 0.5
---- !u!84 &541454649
+--- !u!84 &556514699
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1533,7 +1533,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 541454649}
+  m_Texture: {fileID: 556514699}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -2525,63 +2525,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 479529f25fde45442be6c9232a97234d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MinimapAutoSetup
---- !u!1 &1545748711
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1545748713}
-  - component: {fileID: 1545748712}
-  - component: {fileID: 1545748714}
-  m_Layer: 0
-  m_Name: UIAutoSetup
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1545748712
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1545748711}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f44153b69046c84eb6771a53612dd25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BuildingMenuAutoSetup
---- !u!4 &1545748713
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1545748711}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1545748714
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1545748711}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6afa69663e89cc42933305b943ed329, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ForceSetupReferences
 --- !u!1 &1712440913
 GameObject:
   m_ObjectHideFlags: 0
@@ -2752,7 +2695,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 541454649}
+  m_TargetTexture: {fileID: 556514699}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -3387,6 +3330,7 @@ GameObject:
   - component: {fileID: 1988261758}
   - component: {fileID: 1988261757}
   - component: {fileID: 1988261759}
+  - component: {fileID: 1988261760}
   m_Layer: 0
   m_Name: RightSidebar
   m_TagString: Untagged
@@ -3473,6 +3417,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b7c7f3295ad8da646bcd591f76a1f174, type: 2}
   - {fileID: 11400000, guid: d745191e6e951054eabcf5358ba4c44b, type: 2}
   - {fileID: 11400000, guid: bea76d4301b63d842b387558719c65da, type: 2}
+--- !u!114 &1988261760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988261755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f44153b69046c84eb6771a53612dd25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingMenuAutoSetup
 --- !u!1 &2008146077
 GameObject:
   m_ObjectHideFlags: 0
@@ -3705,6 +3661,5 @@ SceneRoots:
   - {fileID: 1712440916}
   - {fileID: 436958454}
   - {fileID: 1259050207}
-  - {fileID: 1545748713}
   - {fileID: 2008146082}
   - {fileID: 193058110}

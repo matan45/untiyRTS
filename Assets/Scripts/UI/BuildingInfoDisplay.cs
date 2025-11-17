@@ -231,8 +231,6 @@ namespace RTS.UI
 
             if (constructionBarObject == null)
                 constructionBarObject = transform.Find("ConstructionBarBackground")?.gameObject;
-
-            Debug.Log("UI elements search complete");
         }
 #endif
     }

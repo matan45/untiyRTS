@@ -70,7 +70,6 @@ namespace RTS.UI
             if (infoDisplay == null)
             {
                 infoDisplay = transform.Find("InfoSection")?.GetComponent<BuildingInfoDisplay>();
-                Debug.Log("BuildingActionUIManager: Auto-found BuildingInfoDisplay");
             }
         }
 
@@ -145,13 +144,6 @@ namespace RTS.UI
 
             actionPanel.SetActive(true);
 
-            // Get action config for debugging
-            var actionConfig = currentBuildingActions?.GetActionConfig();
-            if (actionConfig != null)
-            {
-                Debug.Log($"[BuildingActionUI] Showing panel for building. Layout: {actionConfig.layoutType}, ButtonSize: {actionConfig.buttonSize}, GridColumns: {actionConfig.gridColumns}");
-            }
-
             // Apply UI customization from BuildingActionConfig (colors, backgrounds)
             ApplyUICustomization();
 
@@ -168,6 +160,7 @@ namespace RTS.UI
             CreateActionButtons();
 
             // Apply button layout settings AFTER buttons are created
+            var actionConfig = currentBuildingActions?.GetActionConfig();
             if (actionConfig != null)
             {
                 ApplyButtonLayoutSizing(actionConfig);
@@ -245,7 +238,6 @@ namespace RTS.UI
                         gridLayout.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
                         gridLayout.constraintCount = actionConfig.gridColumns;
                         gridLayout.childAlignment = TextAnchor.MiddleCenter; // Center buttons vertically and horizontally
-                        Debug.Log($"[BuildingActionUI] Applied Grid Layout: cellSize={actionConfig.buttonSize}, spacing={actionConfig.buttonSpacing}, columns={actionConfig.gridColumns}");
                     }
                     break;
 
@@ -259,7 +251,6 @@ namespace RTS.UI
                         horizontalLayout.childForceExpandHeight = false;
                         horizontalLayout.childControlWidth = true;
                         horizontalLayout.childControlHeight = true;
-                        Debug.Log($"[BuildingActionUI] Applied Horizontal Layout: spacing={actionConfig.buttonSpacing}");
                     }
                     break;
 
@@ -273,7 +264,6 @@ namespace RTS.UI
                         verticalLayout.childForceExpandHeight = false;
                         verticalLayout.childControlWidth = true;
                         verticalLayout.childControlHeight = true;
-                        Debug.Log($"[BuildingActionUI] Applied Vertical Layout: spacing={actionConfig.buttonSpacing}");
                     }
                     break;
             }
@@ -284,10 +274,7 @@ namespace RTS.UI
             if (buttonContainer == null || actionConfig == null)
                 return;
 
-            Debug.Log($"[BuildingActionUI] ApplyButtonLayoutSizing called. Layout: {actionConfig.layoutType}, Target size: {actionConfig.buttonSize}, Button count: {buttonContainer.childCount}");
-
             // Apply button sizing based on layout type
-            int buttonIndex = 0;
             foreach (Transform child in buttonContainer)
             {
                 if (child == null) continue;
@@ -298,7 +285,6 @@ namespace RTS.UI
                     var layoutElement = child.GetComponent<UnityEngine.UI.LayoutElement>();
                     if (layoutElement != null)
                     {
-                        Debug.Log($"[BuildingActionUI] Button {buttonIndex}: Removing conflicting LayoutElement");
                         DestroyImmediate(layoutElement);
                     }
 
@@ -306,9 +292,7 @@ namespace RTS.UI
                     var rectTransform = child.GetComponent<RectTransform>();
                     if (rectTransform != null)
                     {
-                        var oldSize = rectTransform.sizeDelta;
                         rectTransform.sizeDelta = actionConfig.buttonSize;
-                        Debug.Log($"[BuildingActionUI] Button {buttonIndex}: Set sizeDelta from {oldSize} to {actionConfig.buttonSize}");
                     }
                 }
                 // For Horizontal and Vertical layouts, use LayoutElement to control button sizes
@@ -317,10 +301,7 @@ namespace RTS.UI
                 {
                     var layoutElement = child.GetComponent<UnityEngine.UI.LayoutElement>();
                     if (layoutElement == null)
-                    {
                         layoutElement = child.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
-                        Debug.Log($"[BuildingActionUI] Button {buttonIndex}: Added LayoutElement");
-                    }
 
                     if (layoutElement != null)
                     {
@@ -328,18 +309,14 @@ namespace RTS.UI
                         layoutElement.preferredHeight = actionConfig.buttonSize.y;
                         layoutElement.minWidth = actionConfig.buttonSize.x;
                         layoutElement.minHeight = actionConfig.buttonSize.y;
-                        Debug.Log($"[BuildingActionUI] Button {buttonIndex}: Set LayoutElement size to {actionConfig.buttonSize}");
                     }
                 }
-
-                buttonIndex++;
             }
 
             // Force layout rebuild
             if (buttonContainer != null)
             {
                 UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(buttonContainer.GetComponent<RectTransform>());
-                Debug.Log($"[BuildingActionUI] Forced layout rebuild");
             }
         }
 
@@ -478,8 +455,6 @@ namespace RTS.UI
             {
                 infoDisplay = actionPanel.GetComponentInChildren<BuildingInfoDisplay>();
             }
-
-            Debug.Log("UI References search complete");
         }
 #endif
     }

@@ -243,8 +243,6 @@ namespace RTS.Buildings
             {
                 selectionVisual.ShowSelection(actionConfig);
             }
-
-            Debug.Log($"Building {gameObject.name} selected");
         }
 
         public void Deselect()
@@ -258,8 +256,6 @@ namespace RTS.Buildings
             {
                 selectionVisual.HideSelection();
             }
-
-            Debug.Log($"Building {gameObject.name} deselected");
         }
 
         #endregion
@@ -370,7 +366,6 @@ namespace RTS.Buildings
 
             isUpgrading = true;
             upgradeProgress = 0f;
-            Debug.Log($"Started upgrade for {gameObject.name}");
 
             // TODO: Implement actual upgrade logic
             // - Deduct resources
