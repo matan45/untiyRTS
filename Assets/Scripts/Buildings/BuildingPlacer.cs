@@ -33,7 +33,15 @@ public class BuildingPlacer : MonoBehaviour
     
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions;
-    
+
+    [Header("Rotation Settings")]
+    [Tooltip("Sensitivity of rotation when dragging middle mouse button")]
+    [SerializeField] private float rotationSensitivity = 0.5f;
+
+    [Header("UI References")]
+    [Tooltip("UI Text to display rotation angle")]
+    [SerializeField] private TMPro.TextMeshProUGUI rotationAngleText;
+
     private BuildingData currentBuilding;
     private GameObject ghostObject;
     private bool isPlacing = false;
@@ -43,8 +51,14 @@ public class BuildingPlacer : MonoBehaviour
     private InputAction mousePositionAction;
     private InputAction leftClickAction;
     private InputAction cancelAction;
+    private InputAction middleMouseAction;
 
     private Material[] originalMaterials;
+
+    // Rotation tracking
+    private float currentRotation = 0f;
+    private bool isRotating = false;
+    private Vector2 lastMousePosition;
     
     void Awake()
     {
@@ -74,10 +88,17 @@ public class BuildingPlacer : MonoBehaviour
                 mousePositionAction = cameraMap.FindAction("MousePosition");
                 leftClickAction = cameraMap.FindAction("LeftClick");
                 cancelAction = inputActions.FindActionMap("Camera").FindAction("Rotate");
+                middleMouseAction = cameraMap.FindAction("MiddleMouseDrag");
 
                 if (leftClickAction != null)
                 {
                     leftClickAction.performed += OnLeftClick;
+                }
+
+                if (middleMouseAction != null)
+                {
+                    middleMouseAction.started += OnMiddleMousePressed;
+                    middleMouseAction.canceled += OnMiddleMouseReleased;
                 }
             }
         }
@@ -87,6 +108,12 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (leftClickAction != null)
             leftClickAction.performed -= OnLeftClick;
+
+        if (middleMouseAction != null)
+        {
+            middleMouseAction.started -= OnMiddleMousePressed;
+            middleMouseAction.canceled -= OnMiddleMouseReleased;
+        }
     }
     
     private void SetupInput()
@@ -99,8 +126,9 @@ public class BuildingPlacer : MonoBehaviour
         if (isPlacing && ghostObject != null)
         {
             UpdateGhostPosition();
+            UpdateGhostRotation();
             CheckPlacementValidity();
-            
+
             // Cancel placement with ESC
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
@@ -116,6 +144,10 @@ public class BuildingPlacer : MonoBehaviour
 
         currentBuilding = building;
         isPlacing = true;
+
+        // Reset rotation
+        currentRotation = 0f;
+        isRotating = false;
 
         // Create ghost object
         ghostObject = Instantiate(building.prefab);
@@ -159,24 +191,82 @@ public class BuildingPlacer : MonoBehaviour
     
     private void UpdateGhostPosition()
     {
+        // Don't update position while rotating
+        if (isRotating)
+            return;
+
         if (mousePositionAction == null || mainCamera == null)
             return;
-            
+
         Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
-        
+
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundLayer))
         {
             Vector3 position = hit.point;
-            
+
             // Apply grid snapping
             if (useGridSnapping)
             {
                 position.x = Mathf.Round(position.x / gridSize) * gridSize;
                 position.z = Mathf.Round(position.z / gridSize) * gridSize;
             }
-            
+
             ghostObject.transform.position = position;
+        }
+    }
+
+    private void UpdateGhostRotation()
+    {
+        if (!isRotating || ghostObject == null || mousePositionAction == null)
+        {
+            return;
+        }
+
+        // Calculate mouse delta manually
+        Vector2 currentMousePos = mousePositionAction.ReadValue<Vector2>();
+        Vector2 mouseDelta = currentMousePos - lastMousePosition;
+
+        // Rotate based on horizontal mouse movement
+        currentRotation += mouseDelta.x * rotationSensitivity;
+
+        // Normalize rotation to 0-360 range
+        currentRotation = currentRotation % 360f;
+        if (currentRotation < 0f)
+            currentRotation += 360f;
+
+        // Apply rotation to ghost object
+        ghostObject.transform.rotation = Quaternion.Euler(0f, currentRotation, 0f);
+
+        // Update last mouse position
+        lastMousePosition = currentMousePos;
+
+        // Update UI
+        UpdateRotationUI();
+    }
+
+    private void OnMiddleMousePressed(InputAction.CallbackContext context)
+    {
+        if (isPlacing && mousePositionAction != null)
+        {
+            isRotating = true;
+            // Initialize last mouse position for delta calculation
+            lastMousePosition = mousePositionAction.ReadValue<Vector2>();
+        }
+    }
+
+    private void OnMiddleMouseReleased(InputAction.CallbackContext context)
+    {
+        isRotating = false;
+    }
+
+    private void UpdateRotationUI()
+    {
+        if (rotationAngleText != null && isPlacing)
+        {
+            // Use string.Format to avoid string concatenation allocations in Update
+            rotationAngleText.SetText("Rotation: {0}\u00b0", Mathf.RoundToInt(currentRotation));
+            rotationAngleText.gameObject.SetActive(true);
         }
     }
     
@@ -415,6 +505,14 @@ public class BuildingPlacer : MonoBehaviour
         currentBuilding = null;
         isPlacing = false;
         isValidPlacement = false;
+        isRotating = false;
+        currentRotation = 0f;
+
+        // Hide rotation UI
+        if (rotationAngleText != null)
+        {
+            rotationAngleText.gameObject.SetActive(false);
+        }
 
         if (BuildingMenuController.Instance != null)
         {
