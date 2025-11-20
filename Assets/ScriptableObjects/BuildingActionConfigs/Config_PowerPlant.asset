@@ -23,7 +23,7 @@ MonoBehaviour:
   buildingIcon: {fileID: 0}
   accentColor: {r: 0, g: 1, b: 0, a: 1}
   layoutType: 0
-  gridColumns: 3
-  buttonSpacing: 10
-  buttonSize: {x: 120, y: 120}
+  gridColumns: 2
+  buttonSpacing: 5
+  buttonSize: {x: 85, y: 85}
   buttonContainerPadding: {x: 10, y: 10, z: 10, w: 10}

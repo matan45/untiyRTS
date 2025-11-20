@@ -262,14 +262,6 @@ namespace RTS.UI
                         gridLayout.startAxis = UnityEngine.UI.GridLayoutGroup.Axis.Horizontal;
                         gridLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0); // No extra padding
                     }
-
-                    // Add ContentSizeFitter to make container size itself to fit buttons
-                    var gridFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
-                    if (gridFitter != null)
-                    {
-                        gridFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-                        gridFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-                    }
                     break;
 
                 case RTS.Data.ButtonLayoutType.Horizontal:
@@ -284,14 +276,6 @@ namespace RTS.UI
                         horizontalLayout.childControlHeight = true;
                         horizontalLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0);
                     }
-
-                    // Add ContentSizeFitter
-                    var horizontalFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
-                    if (horizontalFitter != null)
-                    {
-                        horizontalFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-                        horizontalFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-                    }
                     break;
 
                 case RTS.Data.ButtonLayoutType.Vertical:
@@ -305,14 +289,6 @@ namespace RTS.UI
                         verticalLayout.childControlWidth = true;
                         verticalLayout.childControlHeight = true;
                         verticalLayout.padding = new UnityEngine.RectOffset(0, 0, 0, 0);
-                    }
-
-                    // Add ContentSizeFitter
-                    var verticalFitter = buttonContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
-                    if (verticalFitter != null)
-                    {
-                        verticalFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-                        verticalFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
                     }
                     break;
             }
