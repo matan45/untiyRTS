@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using RTS.Data;
 using RTS.Buildings;
+using RTS.UI;
 
 public class BuildingPlacer : MonoBehaviour
 {
@@ -33,7 +34,15 @@ public class BuildingPlacer : MonoBehaviour
     
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions;
-    
+
+    [Header("Rotation Settings")]
+    [Tooltip("Sensitivity of rotation when dragging middle mouse button")]
+    [SerializeField] private float rotationSensitivity = 0.5f;
+
+    [Header("UI References")]
+    [Tooltip("UI Text to display rotation angle")]
+    [SerializeField] private TMPro.TextMeshProUGUI rotationAngleText;
+
     private BuildingData currentBuilding;
     private GameObject ghostObject;
     private bool isPlacing = false;
@@ -42,9 +51,31 @@ public class BuildingPlacer : MonoBehaviour
     private Camera mainCamera;
     private InputAction mousePositionAction;
     private InputAction leftClickAction;
+    private InputAction rightClickAction;
     private InputAction cancelAction;
+    private InputAction middleMouseAction;
 
     private Material[] originalMaterials;
+
+    // Rotation tracking
+    private float currentRotation = 0f;
+    private bool isRotating = false;
+    private Vector2 lastMousePosition;
+
+    // Performance optimization: Cache validity state to avoid updating materials every frame
+    private bool lastValidityState = false;
+
+    // Performance optimization: Cache renderers to avoid GetComponentsInChildren every frame
+    private Renderer[] cachedRenderers;
+
+    // Material rendering mode constants (Unity Standard Shader)
+    private const float MATERIAL_MODE_TRANSPARENT = 3f;
+    private const int MATERIAL_ZWRITE_DISABLED = 0;
+    private const int MATERIAL_RENDER_QUEUE_TRANSPARENT = 3000;
+
+    // URP Shader constants
+    private const float URP_SURFACE_TRANSPARENT = 1f; // 0 = Opaque, 1 = Transparent
+    private const float URP_BLEND_ALPHA = 0f;         // 0 = Alpha blending
     
     void Awake()
     {
@@ -73,11 +104,24 @@ public class BuildingPlacer : MonoBehaviour
             {
                 mousePositionAction = cameraMap.FindAction("MousePosition");
                 leftClickAction = cameraMap.FindAction("LeftClick");
+                rightClickAction = cameraMap.FindAction("RightClick");
                 cancelAction = inputActions.FindActionMap("Camera").FindAction("Rotate");
+                middleMouseAction = cameraMap.FindAction("MiddleMouseDrag");
 
                 if (leftClickAction != null)
                 {
                     leftClickAction.performed += OnLeftClick;
+                }
+
+                if (rightClickAction != null)
+                {
+                    rightClickAction.performed += OnRightClick;
+                }
+
+                if (middleMouseAction != null)
+                {
+                    middleMouseAction.started += OnMiddleMousePressed;
+                    middleMouseAction.canceled += OnMiddleMouseReleased;
                 }
             }
         }
@@ -87,6 +131,15 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (leftClickAction != null)
             leftClickAction.performed -= OnLeftClick;
+
+        if (rightClickAction != null)
+            rightClickAction.performed -= OnRightClick;
+
+        if (middleMouseAction != null)
+        {
+            middleMouseAction.started -= OnMiddleMousePressed;
+            middleMouseAction.canceled -= OnMiddleMouseReleased;
+        }
     }
     
     private void SetupInput()
@@ -99,8 +152,9 @@ public class BuildingPlacer : MonoBehaviour
         if (isPlacing && ghostObject != null)
         {
             UpdateGhostPosition();
+            UpdateGhostRotation();
             CheckPlacementValidity();
-            
+
             // Cancel placement with ESC
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
@@ -116,6 +170,10 @@ public class BuildingPlacer : MonoBehaviour
 
         currentBuilding = building;
         isPlacing = true;
+
+        // Reset rotation
+        currentRotation = 0f;
+        isRotating = false;
 
         // Create ghost object
         ghostObject = Instantiate(building.prefab);
@@ -143,10 +201,11 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (ghostObject == null)
             return;
-            
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
-        
-        foreach (var renderer in renderers)
+
+        // Cache renderers for performance (avoid GetComponentsInChildren every frame)
+        cachedRenderers = ghostObject.GetComponentsInChildren<Renderer>();
+
+        foreach (var renderer in cachedRenderers)
         {
             Material[] mats = new Material[renderer.materials.Length];
             for (int i = 0; i < mats.Length; i++)
@@ -155,28 +214,89 @@ public class BuildingPlacer : MonoBehaviour
             }
             renderer.materials = mats;
         }
+
+        // Initialize validity state
+        lastValidityState = false;
     }
     
     private void UpdateGhostPosition()
     {
+        // Don't update position while rotating
+        if (isRotating)
+            return;
+
         if (mousePositionAction == null || mainCamera == null)
             return;
-            
+
         Vector2 mousePos = mousePositionAction.ReadValue<Vector2>();
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
-        
+
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundLayer))
         {
             Vector3 position = hit.point;
-            
+
             // Apply grid snapping
             if (useGridSnapping)
             {
                 position.x = Mathf.Round(position.x / gridSize) * gridSize;
                 position.z = Mathf.Round(position.z / gridSize) * gridSize;
             }
-            
+
             ghostObject.transform.position = position;
+        }
+    }
+
+    private void UpdateGhostRotation()
+    {
+        if (!isRotating || ghostObject == null || mousePositionAction == null)
+        {
+            return;
+        }
+
+        // Calculate mouse delta manually
+        Vector2 currentMousePos = mousePositionAction.ReadValue<Vector2>();
+        Vector2 mouseDelta = currentMousePos - lastMousePosition;
+
+        // Rotate based on horizontal mouse movement
+        currentRotation += mouseDelta.x * rotationSensitivity;
+
+        // Normalize rotation to 0-360 range
+        currentRotation = currentRotation % 360f;
+        if (currentRotation < 0f)
+            currentRotation += 360f;
+
+        // Apply rotation to ghost object
+        ghostObject.transform.rotation = Quaternion.Euler(0f, currentRotation, 0f);
+
+        // Update last mouse position
+        lastMousePosition = currentMousePos;
+
+        // Update UI
+        UpdateRotationUI();
+    }
+
+    private void OnMiddleMousePressed(InputAction.CallbackContext context)
+    {
+        if (isPlacing && mousePositionAction != null)
+        {
+            isRotating = true;
+            // Initialize last mouse position for delta calculation
+            lastMousePosition = mousePositionAction.ReadValue<Vector2>();
+        }
+    }
+
+    private void OnMiddleMouseReleased(InputAction.CallbackContext context)
+    {
+        isRotating = false;
+    }
+
+    private void UpdateRotationUI()
+    {
+        if (rotationAngleText != null && isPlacing)
+        {
+            // Use string.Format to avoid string concatenation allocations in Update
+            rotationAngleText.SetText("Rotation: {0}\u00b0", Mathf.RoundToInt(currentRotation));
+            rotationAngleText.gameObject.SetActive(true);
         }
     }
     
@@ -192,8 +312,12 @@ public class BuildingPlacer : MonoBehaviour
 
         isValidPlacement = hasResources && !hasCollision && validSlope;
 
-        // Update material color
-        UpdateGhostMaterial(isValidPlacement);
+        // Performance optimization: Only update materials when validity state changes
+        if (isValidPlacement != lastValidityState)
+        {
+            UpdateGhostMaterial(isValidPlacement);
+            lastValidityState = isValidPlacement;
+        }
     }
     
     /// <summary>
@@ -218,22 +342,24 @@ public class BuildingPlacer : MonoBehaviour
         // Check for buildings and obstacles (not ground)
         foreach (var col in colliders)
         {
-            // Ignore ground and ghost objects
-            if (col.gameObject.name == "Ground" || col.gameObject.name.StartsWith("Ghost_"))
+            // Ignore ghost object hierarchy first
+            if (col.transform.IsChildOf(ghostObject.transform) || col.transform == ghostObject.transform)
                 continue;
 
-            // Check if it's another building - STRICT CHECK to prevent building on buildings
-            Building otherBuilding = col.GetComponent<Building>();
+            // CRITICAL FIX: Check for buildings BEFORE filtering by ground layer
+            // This prevents buildings from being filtered out if they're on the ground layer
+            // Use GetComponentInParent to search up the hierarchy for Building component
+            Building otherBuilding = col.GetComponentInParent<Building>();
             if (otherBuilding != null)
             {
                 return true; // Collision with another building - invalid placement
             }
 
-            // Also block placement on any other non-ground collider (rocks, trees, etc.)
-            if (!IsGroundLayer(col.gameObject.layer))
-            {
-                return true;
-            }
+            // Now filter out ground layer (after checking for buildings)
+            if (IsGroundLayer(col.gameObject.layer))
+                continue;
+            
+            return true;
         }
 
         return false; // No collisions - valid placement
@@ -310,15 +436,18 @@ public class BuildingPlacer : MonoBehaviour
     
     private void UpdateGhostMaterial(bool valid)
     {
-        if (ghostObject == null)
+        // Use cached renderers to avoid GetComponentsInChildren call
+        if (cachedRenderers == null || cachedRenderers.Length == 0)
             return;
 
         Color targetColor = valid ? validPlacementColor : invalidPlacementColor;
         Material targetMaterial = valid ? validPlacementMaterial : invalidPlacementMaterial;
 
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
-        foreach (var renderer in renderers)
+        foreach (var renderer in cachedRenderers)
         {
+            if (renderer == null)
+                continue;
+
             // If custom materials are assigned, use them
             if (targetMaterial != null)
             {
@@ -353,20 +482,47 @@ public class BuildingPlacer : MonoBehaviour
 
     /// <summary>
     /// Configures a material to support transparency.
+    /// Supports both Standard shader and URP (Universal Render Pipeline) shaders.
     /// </summary>
     private void SetMaterialTransparent(Material material)
     {
         if (material == null) return;
 
-        // Set rendering mode to Transparent (for Standard shader)
-        material.SetFloat("_Mode", 3); // Transparent mode
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        material.SetInt("_ZWrite", 0);
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.EnableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        material.renderQueue = 3000;
+        // Detect shader type and apply appropriate transparency settings
+        bool isURPShader = material.HasProperty("_Surface") ||
+                          material.shader.name.Contains("Universal Render Pipeline");
+
+        if (isURPShader)
+        {
+            // URP Lit shader transparency settings
+            material.SetFloat("_Surface", URP_SURFACE_TRANSPARENT);
+            material.SetFloat("_Blend", URP_BLEND_ALPHA);
+
+            // Set blend modes for URP
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", MATERIAL_ZWRITE_DISABLED);
+
+            // Enable URP transparency keywords
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+        }
+        else
+        {
+            // Standard shader transparency settings
+            material.SetFloat("_Mode", MATERIAL_MODE_TRANSPARENT);
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", MATERIAL_ZWRITE_DISABLED);
+
+            // Enable Standard shader transparency keywords
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        }
+
+        // Set render queue to transparent (common for both shader types)
+        material.renderQueue = MATERIAL_RENDER_QUEUE_TRANSPARENT;
     }
     
     private void OnLeftClick(InputAction.CallbackContext context)
@@ -376,26 +532,75 @@ public class BuildingPlacer : MonoBehaviour
             PlaceBuilding();
         }
     }
-    
+
+    private void OnRightClick(InputAction.CallbackContext context)
+    {
+        if (isPlacing)
+        {
+            CancelPlacement();
+        }
+    }
+
     public void PlaceBuilding()
     {
         if (!isValidPlacement || ghostObject == null || currentBuilding == null)
             return;
-            
+
         // Spend resources
         if (ResourceManager.Instance != null)
         {
             if (!ResourceManager.Instance.SpendResources(currentBuilding.creditsCost, currentBuilding.powerRequired))
                 return;
         }
-        
+
         // Create actual building
         GameObject building = Instantiate(currentBuilding.prefab, ghostObject.transform.position, ghostObject.transform.rotation);
-        
+
+        // IMPORTANT: Ensure colliders are enabled on placed building
+        // This prevents buildings from being placed on top of each other
+        Collider[] buildingColliders = building.GetComponentsInChildren<Collider>();
+        foreach (var col in buildingColliders)
+        {
+            col.enabled = true;
+        }
+
         // Add to build queue
+        bool addedToQueue = false;
         if (BuildQueue.Instance != null)
         {
-            BuildQueue.Instance.AddToQueue(building.GetComponent<Building>(), currentBuilding);
+            addedToQueue = BuildQueue.Instance.AddToQueue(building.GetComponent<Building>(), currentBuilding);
+        }
+        else
+        {
+            // No queue manager, consider it successful
+            addedToQueue = true;
+        }
+
+        // If queue is full, refund resources and destroy the building
+        if (!addedToQueue)
+        {
+            // Refund the resources
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.RefundResources(currentBuilding.creditsCost, currentBuilding.powerRequired);
+            }
+
+            // Destroy the building we just created
+            Destroy(building);
+
+            // Show error message to user in UI
+            if (UIMessageDisplay.Instance != null)
+            {
+                UIMessageDisplay.Instance.ShowWarning("Build queue is full! Maximum 5 buildings allowed.");
+            }
+            else
+            {
+                // Fallback to console if UI not available
+                Debug.LogWarning("Build queue is full! Maximum 5 buildings allowed.");
+            }
+
+            // Don't cancel placement - let the user try again or cancel manually
+            return;
         }
 
         // Fire event to notify subscribers (per CLAUDE.md: event-driven architecture)
@@ -415,6 +620,18 @@ public class BuildingPlacer : MonoBehaviour
         currentBuilding = null;
         isPlacing = false;
         isValidPlacement = false;
+        isRotating = false;
+        currentRotation = 0f;
+
+        // Clear cached data
+        cachedRenderers = null;
+        lastValidityState = false;
+
+        // Hide rotation UI
+        if (rotationAngleText != null)
+        {
+            rotationAngleText.gameObject.SetActive(false);
+        }
 
         if (BuildingMenuController.Instance != null)
         {

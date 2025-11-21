@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Refinery
   description: Generates credits over time
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 33e9f3a1a539ac4448ee0e105cf1f111, type: 3}
   prefab: {fileID: 9045715395862513685, guid: ea8157999fd9f974e95fce073411874c, type: 3}
   creditsCost: 500
   powerRequired: 20

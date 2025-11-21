@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Barracks
   description: Trains infantry units
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5463d13467c7e2249b4dc7b67223293f, type: 3}
   prefab: {fileID: 393762378306410563, guid: c7f0d4d84023e5f4e9d60f78d930719c, type: 3}
   creditsCost: 300
   powerRequired: 10

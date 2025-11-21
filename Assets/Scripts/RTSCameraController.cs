@@ -79,11 +79,21 @@ public class RTSCameraController : MonoBehaviour
     void OnDisable()
     {
         // Unsubscribe from events
-        middleMouseDragAction.started -= OnMiddleMouseStart;
-        middleMouseDragAction.canceled -= OnMiddleMouseEnd;
+        if (middleMouseDragAction != null)
+        {
+            middleMouseDragAction.started -= OnMiddleMouseStart;
+            middleMouseDragAction.canceled -= OnMiddleMouseEnd;
+        }
 
         // Disable all actions
-        inputActions.FindActionMap("Camera").Disable();
+        if (inputActions != null)
+        {
+            var cameraMap = inputActions.FindActionMap("Camera");
+            if (cameraMap != null)
+            {
+                cameraMap.Disable();
+            }
+        }
     }
 
     void Update()
@@ -142,6 +152,10 @@ public class RTSCameraController : MonoBehaviour
 
     void HandleMouseDragPan()
     {
+        // Don't pan camera if building placement is active
+        if (BuildingPlacer.Instance != null && BuildingPlacer.Instance.IsPlacing())
+            return;
+
         if (isDragging && mousePositionAction != null)
         {
             Vector2 currentMousePos = mousePositionAction.ReadValue<Vector2>();
@@ -186,6 +200,10 @@ public class RTSCameraController : MonoBehaviour
 
     void OnMiddleMouseStart(InputAction.CallbackContext context)
     {
+        // Don't start camera drag if building placement is active
+        if (BuildingPlacer.Instance != null && BuildingPlacer.Instance.IsPlacing())
+            return;
+
         isDragging = true;
         lastMousePosition = mousePositionAction.ReadValue<Vector2>();
     }

@@ -137,17 +137,6 @@ namespace RTS.Buildings
             }
         }
 
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            // Update text position in editor when textHeightOffset changes
-            if (constructionText != null && Application.isPlaying)
-            {
-                // Position will be updated in Update() method
-            }
-        }
-#endif
-
         private void CreateConstructionText()
         {
             // Create a new GameObject for the 3D text
