@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3854555031477247094}
   - component: {fileID: 4811169406196570071}
   - component: {fileID: 5144674949178202599}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BuildingPrefab_Barracks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 1971907438751257010}
   - component: {fileID: 4477195443509879516}
   - component: {fileID: 1709035662829817892}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}

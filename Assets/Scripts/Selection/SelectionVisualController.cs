@@ -142,19 +142,5 @@ namespace RTS.Selection
                 HideSelection();
             }
         }
-
-#if UNITY_EDITOR
-        [ContextMenu("Test Show Selection")]
-        private void TestShowSelection()
-        {
-            ShowSelection(null);
-        }
-
-        [ContextMenu("Test Hide Selection")]
-        private void TestHideSelection()
-        {
-            HideSelection();
-        }
-#endif
     }
 }

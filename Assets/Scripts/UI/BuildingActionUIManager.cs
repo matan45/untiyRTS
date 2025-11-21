@@ -470,26 +470,5 @@ namespace RTS.UI
                 }
             }
         }
-
-#if UNITY_EDITOR
-        [ContextMenu("Find UI References")]
-        private void FindUIReferences()
-        {
-            if (actionPanel == null)
-            {
-                actionPanel = transform.Find("ActionPanel")?.gameObject;
-            }
-
-            if (buttonContainer == null && actionPanel != null)
-            {
-                buttonContainer = actionPanel.transform.Find("ButtonContainer");
-            }
-
-            if (infoDisplay == null && actionPanel != null)
-            {
-                infoDisplay = actionPanel.GetComponentInChildren<BuildingInfoDisplay>();
-            }
-        }
-#endif
     }
 }

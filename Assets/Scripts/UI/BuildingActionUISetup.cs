@@ -60,9 +60,5 @@ public class BuildingActionUISetup : MonoBehaviour
                 infoDisplayField.SetValue(uiManager, infoDisplay);
             }
         }
-
-#if UNITY_EDITOR
-        UnityEditor.EditorUtility.SetDirty(uiManager);
-#endif
     }
 }

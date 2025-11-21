@@ -61,6 +61,21 @@ public class BuildingPlacer : MonoBehaviour
     private float currentRotation = 0f;
     private bool isRotating = false;
     private Vector2 lastMousePosition;
+
+    // Performance optimization: Cache validity state to avoid updating materials every frame
+    private bool lastValidityState = false;
+
+    // Performance optimization: Cache renderers to avoid GetComponentsInChildren every frame
+    private Renderer[] cachedRenderers;
+
+    // Material rendering mode constants (Unity Standard Shader)
+    private const float MATERIAL_MODE_TRANSPARENT = 3f;
+    private const int MATERIAL_ZWRITE_DISABLED = 0;
+    private const int MATERIAL_RENDER_QUEUE_TRANSPARENT = 3000;
+
+    // URP Shader constants
+    private const float URP_SURFACE_TRANSPARENT = 1f; // 0 = Opaque, 1 = Transparent
+    private const float URP_BLEND_ALPHA = 0f;         // 0 = Alpha blending
     
     void Awake()
     {
@@ -186,10 +201,11 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (ghostObject == null)
             return;
-            
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
-        
-        foreach (var renderer in renderers)
+
+        // Cache renderers for performance (avoid GetComponentsInChildren every frame)
+        cachedRenderers = ghostObject.GetComponentsInChildren<Renderer>();
+
+        foreach (var renderer in cachedRenderers)
         {
             Material[] mats = new Material[renderer.materials.Length];
             for (int i = 0; i < mats.Length; i++)
@@ -198,6 +214,9 @@ public class BuildingPlacer : MonoBehaviour
             }
             renderer.materials = mats;
         }
+
+        // Initialize validity state
+        lastValidityState = false;
     }
     
     private void UpdateGhostPosition()
@@ -293,8 +312,12 @@ public class BuildingPlacer : MonoBehaviour
 
         isValidPlacement = hasResources && !hasCollision && validSlope;
 
-        // Update material color
-        UpdateGhostMaterial(isValidPlacement);
+        // Performance optimization: Only update materials when validity state changes
+        if (isValidPlacement != lastValidityState)
+        {
+            UpdateGhostMaterial(isValidPlacement);
+            lastValidityState = isValidPlacement;
+        }
     }
     
     /// <summary>
@@ -319,22 +342,24 @@ public class BuildingPlacer : MonoBehaviour
         // Check for buildings and obstacles (not ground)
         foreach (var col in colliders)
         {
-            // Ignore ground and ghost objects
-            if (col.gameObject.name == "Ground" || col.gameObject.name.StartsWith("Ghost_"))
+            // Ignore ghost object hierarchy first
+            if (col.transform.IsChildOf(ghostObject.transform) || col.transform == ghostObject.transform)
                 continue;
 
-            // Check if it's another building - STRICT CHECK to prevent building on buildings
-            Building otherBuilding = col.GetComponent<Building>();
+            // CRITICAL FIX: Check for buildings BEFORE filtering by ground layer
+            // This prevents buildings from being filtered out if they're on the ground layer
+            // Use GetComponentInParent to search up the hierarchy for Building component
+            Building otherBuilding = col.GetComponentInParent<Building>();
             if (otherBuilding != null)
             {
                 return true; // Collision with another building - invalid placement
             }
 
-            // Also block placement on any other non-ground collider (rocks, trees, etc.)
-            if (!IsGroundLayer(col.gameObject.layer))
-            {
-                return true;
-            }
+            // Now filter out ground layer (after checking for buildings)
+            if (IsGroundLayer(col.gameObject.layer))
+                continue;
+            
+            return true;
         }
 
         return false; // No collisions - valid placement
@@ -411,15 +436,18 @@ public class BuildingPlacer : MonoBehaviour
     
     private void UpdateGhostMaterial(bool valid)
     {
-        if (ghostObject == null)
+        // Use cached renderers to avoid GetComponentsInChildren call
+        if (cachedRenderers == null || cachedRenderers.Length == 0)
             return;
 
         Color targetColor = valid ? validPlacementColor : invalidPlacementColor;
         Material targetMaterial = valid ? validPlacementMaterial : invalidPlacementMaterial;
 
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
-        foreach (var renderer in renderers)
+        foreach (var renderer in cachedRenderers)
         {
+            if (renderer == null)
+                continue;
+
             // If custom materials are assigned, use them
             if (targetMaterial != null)
             {
@@ -454,20 +482,47 @@ public class BuildingPlacer : MonoBehaviour
 
     /// <summary>
     /// Configures a material to support transparency.
+    /// Supports both Standard shader and URP (Universal Render Pipeline) shaders.
     /// </summary>
     private void SetMaterialTransparent(Material material)
     {
         if (material == null) return;
 
-        // Set rendering mode to Transparent (for Standard shader)
-        material.SetFloat("_Mode", 3); // Transparent mode
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        material.SetInt("_ZWrite", 0);
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.EnableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        material.renderQueue = 3000;
+        // Detect shader type and apply appropriate transparency settings
+        bool isURPShader = material.HasProperty("_Surface") ||
+                          material.shader.name.Contains("Universal Render Pipeline");
+
+        if (isURPShader)
+        {
+            // URP Lit shader transparency settings
+            material.SetFloat("_Surface", URP_SURFACE_TRANSPARENT);
+            material.SetFloat("_Blend", URP_BLEND_ALPHA);
+
+            // Set blend modes for URP
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", MATERIAL_ZWRITE_DISABLED);
+
+            // Enable URP transparency keywords
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+        }
+        else
+        {
+            // Standard shader transparency settings
+            material.SetFloat("_Mode", MATERIAL_MODE_TRANSPARENT);
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", MATERIAL_ZWRITE_DISABLED);
+
+            // Enable Standard shader transparency keywords
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        }
+
+        // Set render queue to transparent (common for both shader types)
+        material.renderQueue = MATERIAL_RENDER_QUEUE_TRANSPARENT;
     }
     
     private void OnLeftClick(InputAction.CallbackContext context)
@@ -490,16 +545,24 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (!isValidPlacement || ghostObject == null || currentBuilding == null)
             return;
-            
+
         // Spend resources
         if (ResourceManager.Instance != null)
         {
             if (!ResourceManager.Instance.SpendResources(currentBuilding.creditsCost, currentBuilding.powerRequired))
                 return;
         }
-        
+
         // Create actual building
         GameObject building = Instantiate(currentBuilding.prefab, ghostObject.transform.position, ghostObject.transform.rotation);
+
+        // IMPORTANT: Ensure colliders are enabled on placed building
+        // This prevents buildings from being placed on top of each other
+        Collider[] buildingColliders = building.GetComponentsInChildren<Collider>();
+        foreach (var col in buildingColliders)
+        {
+            col.enabled = true;
+        }
 
         // Add to build queue
         bool addedToQueue = false;
@@ -559,6 +622,10 @@ public class BuildingPlacer : MonoBehaviour
         isValidPlacement = false;
         isRotating = false;
         currentRotation = 0f;
+
+        // Clear cached data
+        cachedRenderers = null;
+        lastValidityState = false;
 
         // Hide rotation UI
         if (rotationAngleText != null)

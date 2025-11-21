@@ -209,29 +209,5 @@ namespace RTS.UI
                 healthBarFill.gameObject.SetActive(false);
             }
         }
-
-#if UNITY_EDITOR
-        [ContextMenu("Find UI Elements")]
-        private void FindUIElements()
-        {
-            if (buildingNameText == null)
-                buildingNameText = transform.Find("BuildingName")?.GetComponent<TextMeshProUGUI>();
-
-            if (buildingIconImage == null)
-                buildingIconImage = transform.Find("BuildingIcon")?.GetComponent<Image>();
-
-            if (statusText == null)
-                statusText = transform.Find("StatusText")?.GetComponent<TextMeshProUGUI>();
-
-            if (healthBarFill == null)
-                healthBarFill = transform.Find("HealthBarBackground/HealthBarFill")?.GetComponent<Image>();
-
-            if (constructionBarFill == null)
-                constructionBarFill = transform.Find("ConstructionBarBackground/ConstructionBarFill")?.GetComponent<Image>();
-
-            if (constructionBarObject == null)
-                constructionBarObject = transform.Find("ConstructionBarBackground")?.gameObject;
-        }
-#endif
     }
 }

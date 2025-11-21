@@ -217,21 +217,5 @@ namespace RTS.UI
             // Execute the action
             buildingActions.ExecuteAction(actionData.actionId);
         }
-
-#if UNITY_EDITOR
-        [ContextMenu("Find UI Elements")]
-        private void FindUIElements()
-        {
-            if (button == null)
-                button = GetComponent<Button>();
-
-            if (iconImage == null)
-                iconImage = transform.Find("Icon")?.GetComponent<Image>();
-
-            if (nameText == null)
-                nameText = GetComponentInChildren<TextMeshProUGUI>();
-
-        }
-#endif
     }
 }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 435534976969529138}
   - component: {fileID: 6423031367116735406}
   - component: {fileID: -8952601955082785671}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BuildingPrefab_PowerPlant
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 3754188910028998459}
   - component: {fileID: 7553945084355497381}
   - component: {fileID: 7298028346707314961}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}

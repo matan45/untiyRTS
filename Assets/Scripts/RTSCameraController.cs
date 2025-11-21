@@ -79,11 +79,21 @@ public class RTSCameraController : MonoBehaviour
     void OnDisable()
     {
         // Unsubscribe from events
-        middleMouseDragAction.started -= OnMiddleMouseStart;
-        middleMouseDragAction.canceled -= OnMiddleMouseEnd;
+        if (middleMouseDragAction != null)
+        {
+            middleMouseDragAction.started -= OnMiddleMouseStart;
+            middleMouseDragAction.canceled -= OnMiddleMouseEnd;
+        }
 
         // Disable all actions
-        inputActions.FindActionMap("Camera").Disable();
+        if (inputActions != null)
+        {
+            var cameraMap = inputActions.FindActionMap("Camera");
+            if (cameraMap != null)
+            {
+                cameraMap.Disable();
+            }
+        }
     }
 
     void Update()
