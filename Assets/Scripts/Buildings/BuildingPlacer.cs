@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using RTS.Data;
 using RTS.Buildings;
+using RTS.UI;
 
 public class BuildingPlacer : MonoBehaviour
 {
@@ -50,6 +51,7 @@ public class BuildingPlacer : MonoBehaviour
     private Camera mainCamera;
     private InputAction mousePositionAction;
     private InputAction leftClickAction;
+    private InputAction rightClickAction;
     private InputAction cancelAction;
     private InputAction middleMouseAction;
 
@@ -87,12 +89,18 @@ public class BuildingPlacer : MonoBehaviour
             {
                 mousePositionAction = cameraMap.FindAction("MousePosition");
                 leftClickAction = cameraMap.FindAction("LeftClick");
+                rightClickAction = cameraMap.FindAction("RightClick");
                 cancelAction = inputActions.FindActionMap("Camera").FindAction("Rotate");
                 middleMouseAction = cameraMap.FindAction("MiddleMouseDrag");
 
                 if (leftClickAction != null)
                 {
                     leftClickAction.performed += OnLeftClick;
+                }
+
+                if (rightClickAction != null)
+                {
+                    rightClickAction.performed += OnRightClick;
                 }
 
                 if (middleMouseAction != null)
@@ -108,6 +116,9 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (leftClickAction != null)
             leftClickAction.performed -= OnLeftClick;
+
+        if (rightClickAction != null)
+            rightClickAction.performed -= OnRightClick;
 
         if (middleMouseAction != null)
         {
@@ -466,7 +477,15 @@ public class BuildingPlacer : MonoBehaviour
             PlaceBuilding();
         }
     }
-    
+
+    private void OnRightClick(InputAction.CallbackContext context)
+    {
+        if (isPlacing)
+        {
+            CancelPlacement();
+        }
+    }
+
     public void PlaceBuilding()
     {
         if (!isValidPlacement || ghostObject == null || currentBuilding == null)
@@ -481,11 +500,44 @@ public class BuildingPlacer : MonoBehaviour
         
         // Create actual building
         GameObject building = Instantiate(currentBuilding.prefab, ghostObject.transform.position, ghostObject.transform.rotation);
-        
+
         // Add to build queue
+        bool addedToQueue = false;
         if (BuildQueue.Instance != null)
         {
-            BuildQueue.Instance.AddToQueue(building.GetComponent<Building>(), currentBuilding);
+            addedToQueue = BuildQueue.Instance.AddToQueue(building.GetComponent<Building>(), currentBuilding);
+        }
+        else
+        {
+            // No queue manager, consider it successful
+            addedToQueue = true;
+        }
+
+        // If queue is full, refund resources and destroy the building
+        if (!addedToQueue)
+        {
+            // Refund the resources
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.RefundResources(currentBuilding.creditsCost, currentBuilding.powerRequired);
+            }
+
+            // Destroy the building we just created
+            Destroy(building);
+
+            // Show error message to user in UI
+            if (UIMessageDisplay.Instance != null)
+            {
+                UIMessageDisplay.Instance.ShowWarning("Build queue is full! Maximum 5 buildings allowed.");
+            }
+            else
+            {
+                // Fallback to console if UI not available
+                Debug.LogWarning("Build queue is full! Maximum 5 buildings allowed.");
+            }
+
+            // Don't cancel placement - let the user try again or cancel manually
+            return;
         }
 
         // Fire event to notify subscribers (per CLAUDE.md: event-driven architecture)
