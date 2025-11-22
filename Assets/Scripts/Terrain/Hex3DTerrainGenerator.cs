@@ -1,4 +1,5 @@
 using UnityEngine;
+using RTS.Terrain.Core;
 
 namespace RTS.Terrain
 {
@@ -103,6 +104,13 @@ namespace RTS.Terrain
 
             // Optional: Add collider for clicking/selection
             // The primitive already has a collider
+
+            // Register with HexGridManager
+            HexGridManager gridManager = HexGridManager.Instance;
+            if (gridManager != null)
+            {
+                gridManager.RegisterTerrainTile(q, r, hexTile, terrainInfo.terrainType);
+            }
         }
 
         private Vector3 AxialToWorld(int q, int r)
@@ -115,15 +123,15 @@ namespace RTS.Terrain
         private TerrainInfo GetTerrainFromNoise(float noise)
         {
             if (noise < 0.25f)
-                return new TerrainInfo { height = waterHeight, material = waterMaterial };
+                return new TerrainInfo { height = waterHeight, material = waterMaterial, terrainType = TerrainType.Water };
             else if (noise < 0.45f)
-                return new TerrainInfo { height = grassHeight, material = grassMaterial };
+                return new TerrainInfo { height = grassHeight, material = grassMaterial, terrainType = TerrainType.Grassland };
             else if (noise < 0.6f)
-                return new TerrainInfo { height = plainsHeight, material = plainsMaterial };
+                return new TerrainInfo { height = plainsHeight, material = plainsMaterial, terrainType = TerrainType.Plains };
             else if (noise < 0.8f)
-                return new TerrainInfo { height = hillsHeight, material = hillsMaterial };
+                return new TerrainInfo { height = hillsHeight, material = hillsMaterial, terrainType = TerrainType.Hills };
             else
-                return new TerrainInfo { height = mountainHeight, material = mountainMaterial };
+                return new TerrainInfo { height = mountainHeight, material = mountainMaterial, terrainType = TerrainType.Mountains };
         }
 
         private void CreateDefaultMaterialsIfNeeded()
@@ -172,6 +180,7 @@ namespace RTS.Terrain
         {
             public float height;
             public Material material;
+            public TerrainType terrainType;
         }
     }
 }
