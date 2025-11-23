@@ -126,8 +126,6 @@ namespace RTS.UI
                     buildingButtons.Add(button);
                 }
             }
-
-            Debug.Log($"TurnBasedBuildingMenu: Created {buildingButtons.Count} building buttons");
         }
 
         /// <summary>

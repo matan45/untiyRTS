@@ -119,6 +119,55 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &56891762
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 56891763}
+  - component: {fileID: 56891764}
+  m_Layer: 0
+  m_Name: CitadelSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &56891763
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56891762}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &56891764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56891762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbe8938463ae0cb44b9120c236993925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.CitadelSpawner
+  citadelPrefab: {fileID: 8283258451733029131, guid: 87d240115d94d22449212fd6925ce68f, type: 3}
+  spawnDelay: 2
+  spawnOnStart: 1
+  heightOffset: 1
+  validTerrainTypes: 0000000001000000
 --- !u!1 &239035323
 GameObject:
   m_ObjectHideFlags: 0
@@ -2265,6 +2314,7 @@ GameObject:
   - component: {fileID: 1791548327}
   - component: {fileID: 1791548329}
   - component: {fileID: 1791548328}
+  - component: {fileID: 1791548330}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -2313,6 +2363,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ResourceManager
   startingCredits: 5000
   startingPower: 100
+--- !u!114 &1791548330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1791548326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad4f1f2d68d69b24a896e4ceebcaa086, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Core.HexGridManager
+  gridWidth: 50
+  gridHeight: 50
+  hexSize: 1
 --- !u!1 &1948770570
 GameObject:
   m_ObjectHideFlags: 0
@@ -2891,3 +2956,4 @@ SceneRoots:
   - {fileID: 1791548327}
   - {fileID: 1376059005}
   - {fileID: 878916326}
+  - {fileID: 56891763}
