@@ -13,6 +13,9 @@ namespace RTS.Data
         [Tooltip("Display name of the unit")]
         public string unitName;
 
+        [Tooltip("Icon to display in the UI")]
+        public Sprite icon;
+
         [Header("Prefab")]
         [Tooltip("Unit prefab to spawn when production completes")]
         public GameObject prefab;

@@ -62,11 +62,11 @@ namespace RTS.UI
             if (unitData == null)
                 return;
 
-            // Update icon (if units have icons in the future)
+            // Update icon
             if (iconImage != null)
             {
-                // UnitData doesn't have icon field yet, so we'll just disable it
-                iconImage.enabled = false;
+                iconImage.sprite = unitData.icon;
+                iconImage.enabled = unitData.icon != null;
             }
 
             // Update name
