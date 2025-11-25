@@ -12,10 +12,16 @@ namespace RTS.UI
     /// Turn-based building menu controller.
     /// Adapted from BuildingMenuController for hex grid placement.
     /// Displays available buildings, handles selection, triggers HexBuildingPlacer.
+    /// NOTE: This is a SCENE-SPECIFIC singleton - UI is per-level.
+    /// The instance will be destroyed when loading a new scene.
     /// </summary>
     public class TurnBasedBuildingMenu : MonoBehaviour
     {
         public static TurnBasedBuildingMenu Instance { get; private set; }
+
+        [Header("Singleton Settings")]
+        [SerializeField, Tooltip("If true, this UI will persist across scene loads. Typically FALSE for scene-specific UI.")]
+        private bool persistAcrossScenes = false;
 
         [Header("UI References")]
         [SerializeField] private Transform buttonContainer;
@@ -32,25 +38,55 @@ namespace RTS.UI
         private List<BuildingButton> buildingButtons = new List<BuildingButton>();
         private BuildingData selectedBuilding;
         private ResourceManager resourceManager;
+        private BuildingManager buildingManager;
+        private UIMessageDisplay messageDisplay;
 
         private void Awake()
         {
+            // Singleton pattern with optional persistence
             if (Instance != null && Instance != this)
             {
+                Debug.LogWarning($"TurnBasedBuildingMenu: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
+
+            // Optional persistence (typically false for scene-specific UI)
+            if (persistAcrossScenes)
+            {
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("TurnBasedBuildingMenu: Set to persist across scenes.");
+            }
         }
 
         private void Start()
         {
-            // Find ResourceManager
+            // Cache manager references
             resourceManager = FindFirstObjectByType<ResourceManager>();
-            if (resourceManager != null)
+            buildingManager = FindFirstObjectByType<BuildingManager>();
+            messageDisplay = FindFirstObjectByType<UIMessageDisplay>();
+
+            // Validate critical dependencies
+            if (resourceManager == null)
+            {
+                Debug.LogWarning("TurnBasedBuildingMenu: ResourceManager not found in scene. Resource validation will be skipped.");
+            }
+            else
             {
                 resourceManager.OnCreditsChanged += (credits) => UpdateResourceDisplay();
                 resourceManager.OnPowerChanged += (available, total) => UpdateResourceDisplay();
+            }
+
+            if (buildingManager == null)
+            {
+                Debug.LogWarning("TurnBasedBuildingMenu: BuildingManager not found in scene. Prerequisite checks will be skipped.");
+            }
+
+            if (messageDisplay == null)
+            {
+                Debug.LogWarning("TurnBasedBuildingMenu: UIMessageDisplay not found in scene. User messages will only appear in console.");
             }
 
             // Auto-load buildings if enabled
@@ -66,10 +102,17 @@ namespace RTS.UI
 
         private void OnDestroy()
         {
+            // Unsubscribe from events
             if (resourceManager != null)
             {
                 resourceManager.OnCreditsChanged -= (credits) => UpdateResourceDisplay();
                 resourceManager.OnPowerChanged -= (available, total) => UpdateResourceDisplay();
+            }
+
+            // Clear static instance when destroyed
+            if (Instance == this)
+            {
+                Instance = null;
             }
         }
 
@@ -150,8 +193,7 @@ namespace RTS.UI
                 }
             }
 
-            // Check prerequisites (requires BuildingManager)
-            BuildingManager buildingManager = FindFirstObjectByType<BuildingManager>();
+            // Check prerequisites
             if (buildingManager != null && buildingData.requiredBuildings != null)
             {
                 foreach (BuildingData required in buildingData.requiredBuildings)
@@ -230,8 +272,7 @@ namespace RTS.UI
         /// </summary>
         private void ShowMessage(string message)
         {
-            // Try to find UIMessageDisplay (from existing system)
-            UIMessageDisplay messageDisplay = FindFirstObjectByType<UIMessageDisplay>();
+            // Use cached UIMessageDisplay reference
             if (messageDisplay != null)
             {
                 messageDisplay.ShowMessage(message, UnityEngine.Color.white);

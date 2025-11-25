@@ -9,19 +9,33 @@ namespace RTS.Terrain
     /// Handles building placement on hex grid.
     /// Snaps buildings to hex centers, validates terrain type, checks occupancy.
     /// Single-hex buildings only, no rotation.
+    /// NOTE: This is a SCENE-SPECIFIC singleton - placement logic is per-level.
+    /// The instance will be destroyed when loading a new scene.
     /// </summary>
     public class HexBuildingPlacer : MonoBehaviour
     {
         public static HexBuildingPlacer Instance { get; private set; }
 
+        [Header("Singleton Settings")]
+        [SerializeField, Tooltip("If true, this placer will persist across scene loads. Typically FALSE for scene-specific gameplay.")]
+        private bool persistAcrossScenes = false;
+
         [Header("References")]
         [SerializeField] private Camera mainCamera;
-        [SerializeField] private Material validPlacementMaterial;
-        [SerializeField] private Material invalidPlacementMaterial;
+        [SerializeField, Tooltip("Material for valid placement preview. If not assigned, will be created at runtime.")]
+        private Material validPlacementMaterial;
+        [SerializeField, Tooltip("Material for invalid placement preview. If not assigned, will be created at runtime.")]
+        private Material invalidPlacementMaterial;
 
         [Header("Placement Settings")]
         [SerializeField] private float ghostHeightOffset = 0.5f;
         [SerializeField] private LayerMask terrainLayer;
+
+        [Header("Performance Settings")]
+        [SerializeField, Tooltip("Update ghost position every N frames (1 = every frame, 2 = every other frame, etc.). Higher values improve performance.")]
+        [Range(1, 5)] private int updateInterval = 1;
+        [SerializeField, Tooltip("Use Input System actions for better performance (recommended).")]
+        private bool useInputSystemActions = true;
 
         // Current placement state
         private BuildingData currentBuildingData;
@@ -29,31 +43,79 @@ namespace RTS.Terrain
         private Renderer ghostRenderer;
         private bool isPlacing = false;
         private Vector2Int currentHexCoord;
+        private Vector2Int lastHexCoord = new Vector2Int(int.MinValue, int.MinValue);
         private bool isValidPlacement = false;
+        private bool lastValidPlacement = false;
+        private int frameCounter = 0;
+
+        // Cached references
+        private ResourceManager resourceManager;
+
+        // Runtime material tracking (for cleanup)
+        private bool validPlacementMaterialCreatedAtRuntime = false;
+        private bool invalidPlacementMaterialCreatedAtRuntime = false;
+
+        // Input System actions (for event-driven input)
+        private InputAction placeAction;
+        private InputAction cancelAction;
 
         // Events
         public event System.Action<GameObject, Vector2Int> OnBuildingPlaced;
 
         private void Awake()
         {
+            // Singleton pattern with optional persistence
             if (Instance != null && Instance != this)
             {
+                Debug.LogWarning($"HexBuildingPlacer: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
+
+            // Optional persistence (typically false for scene-specific placement)
+            if (persistAcrossScenes)
+            {
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("HexBuildingPlacer: Set to persist across scenes.");
+            }
 
             if (mainCamera == null)
                 mainCamera = Camera.main;
+
+            // Cache manager references
+            resourceManager = FindFirstObjectByType<ResourceManager>();
+            if (resourceManager == null)
+            {
+                Debug.LogWarning("HexBuildingPlacer: ResourceManager not found in scene. Building costs will not be validated.");
+            }
+
+            // Set up Input System actions for event-driven input
+            if (useInputSystemActions)
+            {
+                SetupInputActions();
+            }
 
             CreateDefaultMaterials();
         }
 
         private void Update()
         {
-            if (isPlacing && ghostObject != null)
+            if (!isPlacing || ghostObject == null)
+                return;
+
+            // Throttle updates for performance (only update every N frames)
+            frameCounter++;
+            if (frameCounter >= updateInterval)
             {
+                frameCounter = 0;
                 UpdateGhostPosition();
+            }
+
+            // Handle input polling (only if not using Input System actions)
+            if (!useInputSystemActions)
+            {
                 HandlePlacementInput();
             }
         }
@@ -73,6 +135,16 @@ namespace RTS.Terrain
             CreateGhostObject();
             isPlacing = true;
 
+            // Enable input actions if using Input System
+            if (useInputSystemActions)
+            {
+                placeAction?.Enable();
+                cancelAction?.Enable();
+            }
+
+            // Reset frame counter for immediate update
+            frameCounter = updateInterval;
+
             Debug.Log($"Started placing: {buildingData.buildingName}");
         }
 
@@ -91,6 +163,14 @@ namespace RTS.Terrain
             currentBuildingData = null;
             isPlacing = false;
             isValidPlacement = false;
+            lastHexCoord = new Vector2Int(int.MinValue, int.MinValue);
+
+            // Disable input actions if using Input System
+            if (useInputSystemActions)
+            {
+                placeAction?.Disable();
+                cancelAction?.Disable();
+            }
 
             Debug.Log("Placement cancelled");
         }
@@ -139,33 +219,41 @@ namespace RTS.Terrain
             {
                 // Convert world position to hex coordinate
                 Vector2Int hexCoord = HexCoordinates.WorldToAxial(hit.point);
-                currentHexCoord = hexCoord;
 
-                // Get hex center world position
-                Vector3 hexCenter = HexCoordinates.AxialToWorld(hexCoord);
-
-                // Check if hex grid manager exists
-                HexGridManager gridManager = HexGridManager.Instance;
-                if (gridManager != null && gridManager.Grid != null)
+                // Only update if hex coordinate changed (optimization)
+                bool hexChanged = hexCoord != lastHexCoord;
+                if (hexChanged)
                 {
-                    HexTile tile = gridManager.Grid.GetTile(hexCoord);
-                    if (tile != null)
+                    currentHexCoord = hexCoord;
+                    lastHexCoord = hexCoord;
+
+                    // Get hex center world position
+                    Vector3 hexCenter = HexCoordinates.AxialToWorld(hexCoord);
+
+                    // Check if hex grid manager exists
+                    HexGridManager gridManager = HexGridManager.Instance;
+                    if (gridManager != null && gridManager.Grid != null)
                     {
-                        // Use tile's actual height
-                        hexCenter.y = tile.GetWorldPosition().y + ghostHeightOffset;
+                        HexTile tile = gridManager.Grid.GetTile(hexCoord);
+                        if (tile != null)
+                        {
+                            // Use tile's actual height
+                            hexCenter.y = tile.GetWorldPosition().y + ghostHeightOffset;
+                        }
                     }
+
+                    // Position ghost at hex center
+                    ghostObject.transform.position = hexCenter;
+
+                    // Check if placement is valid (only when position changes)
+                    CheckPlacementValidity();
                 }
-
-                // Position ghost at hex center
-                ghostObject.transform.position = hexCenter;
-
-                // Check if placement is valid
-                CheckPlacementValidity();
             }
         }
 
         private void CheckPlacementValidity()
         {
+            bool wasValid = isValidPlacement;
             isValidPlacement = true;
 
             // Check if HexGridManager exists
@@ -173,53 +261,49 @@ namespace RTS.Terrain
             if (gridManager == null || gridManager.Grid == null)
             {
                 isValidPlacement = false;
-                UpdateGhostMaterial();
-                return;
             }
-
-            // Get tile at current position
-            HexTile tile = gridManager.Grid.GetTile(currentHexCoord);
-            if (tile == null)
+            else
             {
-                isValidPlacement = false;
-                UpdateGhostMaterial();
-                return;
+                // Get tile at current position
+                HexTile tile = gridManager.Grid.GetTile(currentHexCoord);
+                if (tile == null)
+                {
+                    isValidPlacement = false;
+                }
+                else if (!tile.IsBuildable)
+                {
+                    // Check if tile is buildable
+                    isValidPlacement = false;
+                }
+                else if (tile.OccupyingBuilding != null)
+                {
+                    // Check if hex already occupied
+                    isValidPlacement = false;
+                }
+                else if (!CanAffordBuilding())
+                {
+                    // Check resources
+                    isValidPlacement = false;
+                }
             }
 
-            // Check if tile is buildable
-            if (!tile.IsBuildable)
+            // Only update material if validity state changed (optimization)
+            if (isValidPlacement != wasValid)
             {
-                isValidPlacement = false;
                 UpdateGhostMaterial();
-                return;
             }
-
-            // Check if hex already occupied
-            if (tile.OccupyingBuilding != null)
-            {
-                isValidPlacement = false;
-                UpdateGhostMaterial();
-                return;
-            }
-
-            // Check resources (requires ResourceManager from existing system)
-            if (!CanAffordBuilding())
-            {
-                isValidPlacement = false;
-                UpdateGhostMaterial();
-                return;
-            }
-
-            // All checks passed
-            isValidPlacement = true;
-            UpdateGhostMaterial();
         }
 
         private bool CanAffordBuilding()
         {
-            // Try to find ResourceManager from existing system
-            var resourceManager = FindFirstObjectByType<ResourceManager>();
-            if (resourceManager != null && currentBuildingData != null)
+            if (currentBuildingData == null)
+            {
+                Debug.LogError("HexBuildingPlacer: Cannot check affordability - building data is null");
+                return false;
+            }
+
+            // Use cached ResourceManager reference
+            if (resourceManager != null)
             {
                 return resourceManager.CanAfford(
                     currentBuildingData.creditsCost,
@@ -227,7 +311,8 @@ namespace RTS.Terrain
                 );
             }
 
-            // If no ResourceManager, assume affordable (for testing)
+            // If no ResourceManager, assume affordable (for testing/single-player without resources)
+            // This warning was already logged in Awake()
             return true;
         }
 
@@ -272,7 +357,6 @@ namespace RTS.Terrain
             }
 
             // Spend resources
-            var resourceManager = FindFirstObjectByType<ResourceManager>();
             if (resourceManager != null)
             {
                 if (!resourceManager.SpendResources(
@@ -314,6 +398,7 @@ namespace RTS.Terrain
 
         private void CreateDefaultMaterials()
         {
+            // Create valid placement material if not assigned
             if (validPlacementMaterial == null)
             {
                 validPlacementMaterial = new Material(Shader.Find("Standard"));
@@ -326,8 +411,12 @@ namespace RTS.Terrain
                 validPlacementMaterial.EnableKeyword("_ALPHABLEND_ON");
                 validPlacementMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 validPlacementMaterial.renderQueue = 3000;
+
+                // Mark as runtime-created for cleanup
+                validPlacementMaterialCreatedAtRuntime = true;
             }
 
+            // Create invalid placement material if not assigned
             if (invalidPlacementMaterial == null)
             {
                 invalidPlacementMaterial = new Material(Shader.Find("Standard"));
@@ -340,9 +429,91 @@ namespace RTS.Terrain
                 invalidPlacementMaterial.EnableKeyword("_ALPHABLEND_ON");
                 invalidPlacementMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 invalidPlacementMaterial.renderQueue = 3000;
+
+                // Mark as runtime-created for cleanup
+                invalidPlacementMaterialCreatedAtRuntime = true;
             }
         }
 
         public bool IsCurrentlyPlacing => isPlacing;
+
+        /// <summary>
+        /// Sets up Input System actions for event-driven input handling.
+        /// </summary>
+        private void SetupInputActions()
+        {
+            // Create place action (left mouse button)
+            placeAction = new InputAction("Place", InputActionType.Button);
+            placeAction.AddBinding("<Mouse>/leftButton");
+            placeAction.performed += ctx => OnPlaceActionPerformed();
+
+            // Create cancel action (right mouse button or Escape)
+            cancelAction = new InputAction("Cancel", InputActionType.Button);
+            cancelAction.AddCompositeBinding("OneModifier")
+                .With("Modifier", "<Mouse>/rightButton")
+                .With("Binding", "<Keyboard>/escape");
+            cancelAction.performed += ctx => OnCancelActionPerformed();
+
+            // Actions start disabled, enabled in StartPlacement()
+        }
+
+        /// <summary>
+        /// Called when place action is performed (left click).
+        /// </summary>
+        private void OnPlaceActionPerformed()
+        {
+            if (isPlacing && isValidPlacement)
+            {
+                PlaceBuilding();
+            }
+        }
+
+        /// <summary>
+        /// Called when cancel action is performed (right click or Escape).
+        /// </summary>
+        private void OnCancelActionPerformed()
+        {
+            if (isPlacing)
+            {
+                CancelPlacement();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Cleanup Input System actions
+            if (placeAction != null)
+            {
+                placeAction.performed -= ctx => OnPlaceActionPerformed();
+                placeAction.Dispose();
+                placeAction = null;
+            }
+
+            if (cancelAction != null)
+            {
+                cancelAction.performed -= ctx => OnCancelActionPerformed();
+                cancelAction.Dispose();
+                cancelAction = null;
+            }
+
+            // Destroy runtime-created materials to prevent memory leaks
+            if (validPlacementMaterialCreatedAtRuntime && validPlacementMaterial != null)
+            {
+                Destroy(validPlacementMaterial);
+                validPlacementMaterial = null;
+            }
+
+            if (invalidPlacementMaterialCreatedAtRuntime && invalidPlacementMaterial != null)
+            {
+                Destroy(invalidPlacementMaterial);
+                invalidPlacementMaterial = null;
+            }
+
+            // Clear static instance when destroyed
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
     }
 }

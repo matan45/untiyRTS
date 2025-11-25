@@ -21,6 +21,10 @@ namespace RTS.UI
         private UnitData unitData;
         private bool isUnlocked = false;
 
+        // Cached manager references
+        private ResourceManager resourceManager;
+        private BuildingManager buildingManager;
+
         public UnitData Data => unitData;
 
         private void Awake()
@@ -46,12 +50,35 @@ namespace RTS.UI
         }
 
         /// <summary>
-        /// Initialize button with unit data.
+        /// Initialize button with unit data and manager references.
         /// </summary>
-        public void Initialize(UnitData data)
+        public void Initialize(UnitData data, ResourceManager resManager = null, BuildingManager bldgManager = null)
         {
             unitData = data;
+            resourceManager = resManager;
+            buildingManager = bldgManager;
+
+            // Log warnings if critical references are missing
+            if (resourceManager == null)
+            {
+                Debug.LogWarning($"UnitButton ({data?.unitName}): ResourceManager reference is null. Affordability checks will be skipped.");
+            }
+
+            if (buildingManager == null)
+            {
+                Debug.LogWarning($"UnitButton ({data?.unitName}): BuildingManager reference is null. Prerequisite checks will be skipped.");
+            }
+
             UpdateUI();
+        }
+
+        /// <summary>
+        /// Set manager references (for dependency injection).
+        /// </summary>
+        public void SetManagers(ResourceManager resManager, BuildingManager bldgManager)
+        {
+            resourceManager = resManager;
+            buildingManager = bldgManager;
         }
 
         /// <summary>
@@ -89,11 +116,22 @@ namespace RTS.UI
         /// </summary>
         public void UpdateLockState()
         {
-            BuildingManager buildingManager = FindFirstObjectByType<BuildingManager>();
-            if (buildingManager == null || unitData == null)
+            if (unitData == null)
+            {
+                Debug.LogWarning("UnitButton: Cannot update lock state - unitData is null");
                 return;
+            }
 
-            isUnlocked = unitData.HasPrerequisites(buildingManager);
+            // Use cached BuildingManager reference
+            if (buildingManager == null)
+            {
+                // Assume unlocked if no BuildingManager (already logged in Initialize)
+                isUnlocked = true;
+            }
+            else
+            {
+                isUnlocked = unitData.HasPrerequisites(buildingManager);
+            }
 
             if (lockOverlay != null)
                 lockOverlay.gameObject.SetActive(!isUnlocked);
@@ -107,9 +145,18 @@ namespace RTS.UI
         /// </summary>
         public void UpdateAffordableState()
         {
-            ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-            if (resourceManager == null || unitData == null)
+            if (unitData == null)
+            {
+                Debug.LogWarning("UnitButton: Cannot update affordable state - unitData is null");
                 return;
+            }
+
+            // Use cached ResourceManager reference
+            if (resourceManager == null)
+            {
+                // Assume affordable if no ResourceManager (already logged in Initialize)
+                return;
+            }
 
             bool canAfford = resourceManager.CanAfford(
                 unitData.creditsCost,

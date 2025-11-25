@@ -22,17 +22,29 @@ namespace RTS.Terrain
         [SerializeField] private float mountainHeight = 1.2f;
 
         [Header("Materials")]
-        [SerializeField] private Material waterMaterial;
-        [SerializeField] private Material grassMaterial;
-        [SerializeField] private Material plainsMaterial;
-        [SerializeField] private Material hillsMaterial;
-        [SerializeField] private Material mountainMaterial;
+        [SerializeField, Tooltip("Material for water terrain. If not assigned, will be created at runtime.")]
+        private Material waterMaterial;
+        [SerializeField, Tooltip("Material for grass terrain. If not assigned, will be created at runtime.")]
+        private Material grassMaterial;
+        [SerializeField, Tooltip("Material for plains terrain. If not assigned, will be created at runtime.")]
+        private Material plainsMaterial;
+        [SerializeField, Tooltip("Material for hills terrain. If not assigned, will be created at runtime.")]
+        private Material hillsMaterial;
+        [SerializeField, Tooltip("Material for mountain terrain. If not assigned, will be created at runtime.")]
+        private Material mountainMaterial;
 
         [Header("Generation")]
         [SerializeField] private float noiseScale = 0.1f;
         [SerializeField] private bool generateOnStart = true;
 
         private GameObject terrainContainer;
+
+        // Runtime material tracking (for cleanup)
+        private bool waterMaterialCreatedAtRuntime = false;
+        private bool grassMaterialCreatedAtRuntime = false;
+        private bool plainsMaterialCreatedAtRuntime = false;
+        private bool hillsMaterialCreatedAtRuntime = false;
+        private bool mountainMaterialCreatedAtRuntime = false;
 
         // Hex constants for flat-top hexagons
         private const float SQRT_3 = 1.732050808f;
@@ -136,34 +148,44 @@ namespace RTS.Terrain
 
         private void CreateDefaultMaterialsIfNeeded()
         {
+            // Create water material if not assigned
             if (waterMaterial == null)
             {
                 waterMaterial = new Material(Shader.Find("Standard"));
                 waterMaterial.color = new Color(0.2f, 0.4f, 0.8f); // Blue
+                waterMaterialCreatedAtRuntime = true;
             }
 
+            // Create grass material if not assigned
             if (grassMaterial == null)
             {
                 grassMaterial = new Material(Shader.Find("Standard"));
                 grassMaterial.color = new Color(0.2f, 0.6f, 0.2f); // Green
+                grassMaterialCreatedAtRuntime = true;
             }
 
+            // Create plains material if not assigned
             if (plainsMaterial == null)
             {
                 plainsMaterial = new Material(Shader.Find("Standard"));
                 plainsMaterial.color = new Color(0.7f, 0.6f, 0.3f); // Tan
+                plainsMaterialCreatedAtRuntime = true;
             }
 
+            // Create hills material if not assigned
             if (hillsMaterial == null)
             {
                 hillsMaterial = new Material(Shader.Find("Standard"));
                 hillsMaterial.color = new Color(0.5f, 0.4f, 0.3f); // Brown
+                hillsMaterialCreatedAtRuntime = true;
             }
 
+            // Create mountain material if not assigned
             if (mountainMaterial == null)
             {
                 mountainMaterial = new Material(Shader.Find("Standard"));
                 mountainMaterial.color = new Color(0.4f, 0.4f, 0.4f); // Gray
+                mountainMaterialCreatedAtRuntime = true;
             }
         }
 
@@ -173,6 +195,40 @@ namespace RTS.Terrain
             if (terrainContainer != null)
             {
                 DestroyImmediate(terrainContainer);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Destroy runtime-created materials to prevent memory leaks
+            if (waterMaterialCreatedAtRuntime && waterMaterial != null)
+            {
+                Destroy(waterMaterial);
+                waterMaterial = null;
+            }
+
+            if (grassMaterialCreatedAtRuntime && grassMaterial != null)
+            {
+                Destroy(grassMaterial);
+                grassMaterial = null;
+            }
+
+            if (plainsMaterialCreatedAtRuntime && plainsMaterial != null)
+            {
+                Destroy(plainsMaterial);
+                plainsMaterial = null;
+            }
+
+            if (hillsMaterialCreatedAtRuntime && hillsMaterial != null)
+            {
+                Destroy(hillsMaterial);
+                hillsMaterial = null;
+            }
+
+            if (mountainMaterialCreatedAtRuntime && mountainMaterial != null)
+            {
+                Destroy(mountainMaterial);
+                mountainMaterial = null;
             }
         }
 

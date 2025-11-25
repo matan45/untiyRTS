@@ -6,10 +6,16 @@ namespace RTS.Terrain.Core
     /// <summary>
     /// Singleton manager for the hex grid system.
     /// Provides global access to the grid and hex utilities.
+    /// NOTE: This is a SCENE-SPECIFIC singleton - each level has its own grid.
+    /// The instance will be destroyed when loading a new scene.
     /// </summary>
     public class HexGridManager : MonoBehaviour
     {
         public static HexGridManager Instance { get; private set; }
+
+        [Header("Singleton Settings")]
+        [SerializeField, Tooltip("If true, this manager will persist across scene loads. For RTS levels, this should typically be FALSE.")]
+        private bool persistAcrossScenes = false;
 
         [Header("Grid Settings")]
         [SerializeField] private int gridWidth = 50;
@@ -20,12 +26,22 @@ namespace RTS.Terrain.Core
 
         private void Awake()
         {
+            // Singleton pattern with optional persistence
             if (Instance != null && Instance != this)
             {
+                Debug.LogWarning($"HexGridManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
+
+            // Optional persistence (typically false for scene-specific grids)
+            if (persistAcrossScenes)
+            {
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("HexGridManager: Set to persist across scenes.");
+            }
 
             // Set hex size for coordinate conversions
             HexCoordinates.HexSize = hexSize;
@@ -75,6 +91,15 @@ namespace RTS.Terrain.Core
         {
             Vector2Int axialCoords = HexCoordinates.WorldToAxial(worldPos);
             return Grid?.GetTile(axialCoords);
+        }
+
+        private void OnDestroy()
+        {
+            // Clear static instance when destroyed
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
     }
 }
