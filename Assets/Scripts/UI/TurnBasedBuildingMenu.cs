@@ -75,8 +75,8 @@ namespace RTS.UI
             }
             else
             {
-                resourceManager.OnCreditsChanged += (credits) => UpdateResourceDisplay();
-                resourceManager.OnPowerChanged += (available, total) => UpdateResourceDisplay();
+                resourceManager.OnCreditsChanged += OnResourcesChanged;
+                resourceManager.OnPowerChanged += OnPowerChangedHandler;
             }
 
             if (buildingManager == null)
@@ -105,8 +105,8 @@ namespace RTS.UI
             // Unsubscribe from events
             if (resourceManager != null)
             {
-                resourceManager.OnCreditsChanged -= (credits) => UpdateResourceDisplay();
-                resourceManager.OnPowerChanged -= (available, total) => UpdateResourceDisplay();
+                resourceManager.OnCreditsChanged -= OnResourcesChanged;
+                resourceManager.OnPowerChanged -= OnPowerChangedHandler;
             }
 
             // Clear static instance when destroyed
@@ -306,5 +306,9 @@ namespace RTS.UI
                 InitializeButtons(); // Refresh UI
             }
         }
+
+        // Event handlers (named methods to allow proper unsubscription)
+        private void OnResourcesChanged(int credits) => UpdateResourceDisplay();
+        private void OnPowerChangedHandler(int available, int total) => UpdateResourceDisplay();
     }
 }

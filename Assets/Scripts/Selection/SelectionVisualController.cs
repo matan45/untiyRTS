@@ -21,8 +21,8 @@ namespace RTS.Selection
         [Tooltip("Renderers to apply outline effect to (auto-detected if empty)")]
         [SerializeField] private Renderer[] targetRenderers;
 
-        private Material[] originalMaterials;
-        private Material[] outlineMaterials;
+        private Material[][] originalMaterials; // Store original materials per renderer
+        private Material[][] instancedMaterials; // Store material instances per renderer
         private bool isShowingSelection = false;
 
         private void Awake()
@@ -41,21 +41,11 @@ namespace RTS.Selection
             if (targetRenderers == null || targetRenderers.Length == 0)
                 return;
 
-            int totalMaterials = 0;
-            foreach (var renderer in targetRenderers)
-            {
-                totalMaterials += renderer.sharedMaterials.Length;
-            }
+            originalMaterials = new Material[targetRenderers.Length][];
 
-            originalMaterials = new Material[totalMaterials];
-            int index = 0;
-
-            foreach (var renderer in targetRenderers)
+            for (int i = 0; i < targetRenderers.Length; i++)
             {
-                foreach (var mat in renderer.sharedMaterials)
-                {
-                    originalMaterials[index++] = mat;
-                }
+                originalMaterials[i] = targetRenderers[i].sharedMaterials;
             }
         }
 
@@ -97,17 +87,20 @@ namespace RTS.Selection
             if (targetRenderers == null || targetRenderers.Length == 0)
                 return;
 
-            // Simple color tint approach (works without custom shader)
-            // For proper outline, you'd need a custom shader or post-processing
-            foreach (var renderer in targetRenderers)
+            // Create and store material instances
+            instancedMaterials = new Material[targetRenderers.Length][];
+
+            for (int r = 0; r < targetRenderers.Length; r++)
             {
-                var materials = renderer.materials;
+                var renderer = targetRenderers[r];
+                var materials = renderer.materials; // Creates new instances - store them!
+                instancedMaterials[r] = materials;
 
                 for (int i = 0; i < materials.Length; i++)
                 {
                     // Enable emission for glow effect
                     materials[i].EnableKeyword("_EMISSION");
-                    materials[i].SetColor("_EmissionColor", color * 0.3f); // Subtle glow
+                    materials[i].SetColor("_EmissionColor", color * 0.3f);
                 }
 
                 renderer.materials = materials;
@@ -119,18 +112,30 @@ namespace RTS.Selection
             if (targetRenderers == null || targetRenderers.Length == 0 || originalMaterials == null)
                 return;
 
-            // Disable emission
-            foreach (var renderer in targetRenderers)
+            // Restore shared materials
+            for (int r = 0; r < targetRenderers.Length; r++)
             {
-                var materials = renderer.materials;
-
-                for (int i = 0; i < materials.Length; i++)
+                if (r < originalMaterials.Length && originalMaterials[r] != null)
                 {
-                    materials[i].DisableKeyword("_EMISSION");
-                    materials[i].SetColor("_EmissionColor", Color.black);
+                    targetRenderers[r].sharedMaterials = originalMaterials[r];
                 }
+            }
 
-                renderer.materials = materials;
+            // Destroy material instances to prevent memory leak
+            if (instancedMaterials != null)
+            {
+                foreach (var materials in instancedMaterials)
+                {
+                    if (materials != null)
+                    {
+                        foreach (var mat in materials)
+                        {
+                            if (mat != null)
+                                Destroy(mat);
+                        }
+                    }
+                }
+                instancedMaterials = null;
             }
         }
 

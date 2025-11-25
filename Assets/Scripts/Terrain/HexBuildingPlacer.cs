@@ -45,7 +45,6 @@ namespace RTS.Terrain
         private Vector2Int currentHexCoord;
         private Vector2Int lastHexCoord = new Vector2Int(int.MinValue, int.MinValue);
         private bool isValidPlacement = false;
-        private bool lastValidPlacement = false;
         private int frameCounter = 0;
 
         // Cached references
@@ -449,9 +448,8 @@ namespace RTS.Terrain
 
             // Create cancel action (right mouse button or Escape)
             cancelAction = new InputAction("Cancel", InputActionType.Button);
-            cancelAction.AddCompositeBinding("OneModifier")
-                .With("Modifier", "<Mouse>/rightButton")
-                .With("Binding", "<Keyboard>/escape");
+            cancelAction.AddBinding("<Mouse>/rightButton");
+            cancelAction.AddBinding("<Keyboard>/escape");
             cancelAction.performed += ctx => OnCancelActionPerformed();
 
             // Actions start disabled, enabled in StartPlacement()
@@ -484,14 +482,12 @@ namespace RTS.Terrain
             // Cleanup Input System actions
             if (placeAction != null)
             {
-                placeAction.performed -= ctx => OnPlaceActionPerformed();
                 placeAction.Dispose();
                 placeAction = null;
             }
 
             if (cancelAction != null)
             {
-                cancelAction.performed -= ctx => OnCancelActionPerformed();
                 cancelAction.Dispose();
                 cancelAction = null;
             }
