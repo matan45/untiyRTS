@@ -1,10 +1,19 @@
 using UnityEngine;
 using System;
 
+/// <summary>
+/// Manages player resources (credits and power).
+/// NOTE: This is a SCENE-SPECIFIC singleton - resources reset per level.
+/// The instance will be destroyed when loading a new scene.
+/// </summary>
 public class ResourceManager : MonoBehaviour
 {
     public static ResourceManager Instance { get; private set; }
-    
+
+    [Header("Singleton Settings")]
+    [SerializeField, Tooltip("If true, resources will persist across scene loads. Typically FALSE for level-based games.")]
+    private bool persistAcrossScenes = false;
+
     [Header("Starting Resources")]
     [SerializeField] private int startingCredits = 5000;
     [SerializeField] private int startingPower = 100;
@@ -24,14 +33,21 @@ public class ResourceManager : MonoBehaviour
     
     void Awake()
     {
-        if (Instance == null)
+        // Singleton pattern with optional persistence
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-        }
-        else
-        {
+            Debug.LogWarning($"ResourceManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
             Destroy(gameObject);
             return;
+        }
+
+        Instance = this;
+
+        // Optional persistence (typically false for scene-specific resources)
+        if (persistAcrossScenes)
+        {
+            DontDestroyOnLoad(gameObject);
+            Debug.Log("ResourceManager: Set to persist across scenes.");
         }
     }
     
@@ -88,5 +104,14 @@ public class ResourceManager : MonoBehaviour
         OnCreditsChanged?.Invoke(currentCredits);
         OnPowerChanged?.Invoke(AvailablePower, currentPower);
         OnResourcesChanged?.Invoke();
+    }
+
+    void OnDestroy()
+    {
+        // Clear static instance when destroyed
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 }

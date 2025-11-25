@@ -74,32 +74,54 @@ public class BuildingButton : MonoBehaviour
     
     public void UpdateLockState()
     {
-        if (BuildingManager.Instance == null || buildingData == null)
+        if (buildingData == null)
+        {
+            Debug.LogWarning("BuildingButton: Cannot update lock state - buildingData is null");
             return;
-            
-        isUnlocked = buildingData.HasPrerequisites(BuildingManager.Instance);
-        
+        }
+
+        if (BuildingManager.Instance == null)
+        {
+            // Assume unlocked if no BuildingManager
+            isUnlocked = true;
+            Debug.LogWarning($"BuildingButton ({buildingData.buildingName}): BuildingManager.Instance is null. Assuming unlocked.");
+        }
+        else
+        {
+            isUnlocked = buildingData.HasPrerequisites(BuildingManager.Instance);
+        }
+
         if (lockOverlay != null)
             lockOverlay.gameObject.SetActive(!isUnlocked);
-            
-        button.interactable = isUnlocked;
+
+        if (button != null)
+            button.interactable = isUnlocked;
     }
     
     public void UpdateAffordableState()
     {
-        if (ResourceManager.Instance == null || buildingData == null)
+        if (buildingData == null)
+        {
+            Debug.LogWarning("BuildingButton: Cannot update affordable state - buildingData is null");
             return;
-            
+        }
+
+        if (ResourceManager.Instance == null)
+        {
+            Debug.LogWarning($"BuildingButton ({buildingData.buildingName}): ResourceManager.Instance is null. Assuming affordable.");
+            return;
+        }
+
         bool canAfford = ResourceManager.Instance.CanAfford(
             buildingData.creditsCost,
             buildingData.powerRequired
         );
-        
+
         // Only disable if also unlocked
-        if (isUnlocked)
+        if (isUnlocked && button != null)
         {
             button.interactable = canAfford;
-            
+
             // Visual feedback for affordability
             if (costText != null)
             {

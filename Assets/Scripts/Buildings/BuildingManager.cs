@@ -4,24 +4,41 @@ using RTS.Data;
 
 namespace RTS.Buildings
 {
+    /// <summary>
+    /// Manages placed buildings and tracks building counts.
+    /// NOTE: This is a SCENE-SPECIFIC singleton - building state resets per level.
+    /// The instance will be destroyed when loading a new scene.
+    /// </summary>
     public class BuildingManager : MonoBehaviour
     {
-    public static BuildingManager Instance { get; private set; }
-    
-    private List<Building> placedBuildings = new List<Building>();
-    private Dictionary<BuildingData, int> buildingCounts = new Dictionary<BuildingData, int>();
-    
-    void Awake()
-    {
-        if (Instance == null)
+        public static BuildingManager Instance { get; private set; }
+
+        [Header("Singleton Settings")]
+        [SerializeField, Tooltip("If true, building state will persist across scene loads. Typically FALSE for level-based games.")]
+        private bool persistAcrossScenes = false;
+
+        private List<Building> placedBuildings = new List<Building>();
+        private Dictionary<BuildingData, int> buildingCounts = new Dictionary<BuildingData, int>();
+
+        void Awake()
         {
+            // Singleton pattern with optional persistence
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning($"BuildingManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
+                Destroy(gameObject);
+                return;
+            }
+
             Instance = this;
+
+            // Optional persistence (typically false for scene-specific buildings)
+            if (persistAcrossScenes)
+            {
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("BuildingManager: Set to persist across scenes.");
+            }
         }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
     
     public void RegisterBuilding(Building building)
     {
@@ -67,6 +84,15 @@ namespace RTS.Buildings
         public List<Building> GetAllBuildings()
         {
             return new List<Building>(placedBuildings);
+        }
+
+        void OnDestroy()
+        {
+            // Clear static instance when destroyed
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
     }
 }
