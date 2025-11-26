@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77e29dfec40628945aeed4a3336f4565, type: 3}
+  m_Name: Grass
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
+  terrainType: 0
+  displayName: Grassland
+  description: 
+  biome: 0
+  movementCost: 1
+  isBuildable: 1
+  isPassable: 1
+  defenseBonus: 0
+  defaultMaterial: {fileID: 2100000, guid: e1a6382c4a21302489bedbf63be93e59, type: 2}
+  minimapColor: {r: 0.07316296, g: 0.9811321, b: 0, a: 1}
+  baseHeight: 0
+  possibleResources: []

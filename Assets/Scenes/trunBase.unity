@@ -1374,6 +1374,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee00ee6c35dcc334ea79e1c9db908aa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.HexBuildingPlacer
+  persistAcrossScenes: 0
   mainCamera: {fileID: 632459144}
   validPlacementMaterial: {fileID: 2100000, guid: 8c54a2aeb31243643a508701d902981b, type: 2}
   invalidPlacementMaterial: {fileID: 2100000, guid: a2dbe0e2432c1434dbb889cf6df5e109, type: 2}
@@ -1381,6 +1382,8 @@ MonoBehaviour:
   terrainLayer:
     serializedVersion: 2
     m_Bits: 1
+  updateInterval: 1
+  useInputSystemActions: 1
 --- !u!1 &659782968
 GameObject:
   m_ObjectHideFlags: 0
@@ -1777,6 +1780,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4df1e77f4943684fa77a258fee37cc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.UI.UnitsMenu
+  persistAcrossScenes: 0
   buttonContainer: {fileID: 437012421}
   unitButtonPrefab: {fileID: 1442082376}
   availableUnits:
@@ -2553,6 +2557,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 649153068533c8942b0dc162d1a5d9d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.UI.TurnBasedBuildingMenu
+  persistAcrossScenes: 0
   buttonContainer: {fileID: 1604955736}
   buildingButtonPrefab: {fileID: 1376059000}
   creditsText: {fileID: 1110198190}
@@ -2898,7 +2903,7 @@ GameObject:
   - component: {fileID: 1791548328}
   - component: {fileID: 1791548330}
   m_Layer: 0
-  m_Name: Managers
+  m_Name: HexGridManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2931,6 +2936,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d6c485bed1b50849b13b327be973eff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Buildings.BuildingManager
+  persistAcrossScenes: 0
 --- !u!114 &1791548329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2943,6 +2949,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47fd4d801da2c6347b644ca98a538deb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResourceManager
+  persistAcrossScenes: 0
   startingCredits: 5000
   startingPower: 100
 --- !u!114 &1791548330
@@ -2957,9 +2964,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad4f1f2d68d69b24a896e4ceebcaa086, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Core.HexGridManager
+  persistAcrossScenes: 0
   gridWidth: 50
   gridHeight: 50
   hexSize: 1
+  terrainRegistry: {fileID: 11400000, guid: c456b96af5585fe41a825af120385b30, type: 2}
 --- !u!1 &1855767679
 GameObject:
   m_ObjectHideFlags: 0
