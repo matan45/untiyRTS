@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using RTS.Terrain;
+using RTS.Terrain.Data;
 
 namespace RTS.Terrain.Core
 {
@@ -22,7 +24,16 @@ namespace RTS.Terrain.Core
         [SerializeField] private int gridHeight = 50;
         [SerializeField] private float hexSize = 1f;
 
+        [Header("Terrain Configuration")]
+        [SerializeField, Tooltip("Registry containing all terrain type configurations")]
+        private TerrainTypeRegistry terrainRegistry;
+
         public HexGrid Grid { get; private set; }
+
+        /// <summary>
+        /// Get the terrain type registry for configuration lookups.
+        /// </summary>
+        public TerrainTypeRegistry TerrainRegistry => terrainRegistry;
 
         private void Awake()
         {
@@ -92,6 +103,114 @@ namespace RTS.Terrain.Core
             Vector2Int axialCoords = HexCoordinates.WorldToAxial(worldPos);
             return Grid?.GetTile(axialCoords);
         }
+
+        #region Save/Load Methods
+
+        /// <summary>
+        /// Save the current grid state to a serializable data object.
+        /// </summary>
+        public HexGridSaveData SaveGrid()
+        {
+            if (Grid == null)
+            {
+                Debug.LogError("HexGridManager: Cannot save - Grid is null");
+                return null;
+            }
+
+            var tiles = new List<HexTileData>();
+            foreach (var tile in Grid.GetAllTiles())
+            {
+                tiles.Add(tile.ToData());
+            }
+
+            var saveData = new HexGridSaveData(gridWidth, gridHeight)
+            {
+                tiles = tiles.ToArray()
+            };
+
+            Debug.Log($"HexGridManager: Saved {tiles.Count} tiles");
+            return saveData;
+        }
+
+        /// <summary>
+        /// Load grid state from serialized data.
+        /// </summary>
+        public void LoadGrid(HexGridSaveData saveData)
+        {
+            if (saveData == null)
+            {
+                Debug.LogError("HexGridManager: Cannot load - saveData is null");
+                return;
+            }
+
+            if (!saveData.Validate())
+            {
+                Debug.LogError("HexGridManager: Cannot load - saveData validation failed");
+                return;
+            }
+
+            int loadedCount = 0;
+            foreach (var data in saveData.tiles)
+            {
+                var tile = Grid.GetTile(data.q, data.r);
+                if (tile != null)
+                {
+                    var config = terrainRegistry?.GetConfig(data.terrainType);
+                    tile.ApplyData(data, config);
+                    loadedCount++;
+                }
+                else
+                {
+                    Debug.LogWarning($"HexGridManager: No tile found at ({data.q}, {data.r}) during load");
+                }
+            }
+
+            Debug.Log($"HexGridManager: Loaded {loadedCount} tiles from save data");
+        }
+
+        /// <summary>
+        /// Export the grid to a JSON string.
+        /// </summary>
+        public string ExportToJson(bool prettyPrint = false)
+        {
+            var saveData = SaveGrid();
+            if (saveData == null)
+                return null;
+
+            return saveData.ToJson(prettyPrint);
+        }
+
+        /// <summary>
+        /// Import the grid from a JSON string.
+        /// </summary>
+        public bool ImportFromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogError("HexGridManager: Cannot import - JSON string is empty");
+                return false;
+            }
+
+            var saveData = HexGridSaveData.FromJson(json);
+            if (saveData == null)
+            {
+                Debug.LogError("HexGridManager: Cannot import - failed to parse JSON");
+                return false;
+            }
+
+            LoadGrid(saveData);
+            return true;
+        }
+
+        /// <summary>
+        /// Get a terrain configuration for a specific terrain type.
+        /// </summary>
+        public TerrainTypeDataSO GetTerrainConfig(TerrainType terrainType)
+        {
+            return terrainRegistry?.GetConfig(terrainType);
+        }
+
+        #endregion
 
         private void OnDestroy()
         {

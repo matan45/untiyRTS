@@ -28,4 +28,17 @@ namespace RTS.Terrain
         Explored,
         Visible
     }
+
+    /// <summary>
+    /// Biome categories that group related terrain types.
+    /// Used for game mechanics that apply to biome groups.
+    /// </summary>
+    public enum BiomeType
+    {
+        Temperate,    // Grassland, Plains, Forest
+        Arid,         // Desert
+        Arctic,       // Tundra, Snow
+        Mountainous,  // Hills, Mountains
+        Aquatic       // Water, DeepWater, Swamp
+    }
 }

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77e29dfec40628945aeed4a3336f4565, type: 3}
+  m_Name: Snow
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
+  terrainType: 4
+  displayName: Snow
+  description: 
+  biome: 2
+  movementCost: 1
+  isBuildable: 1
+  isPassable: 1
+  defenseBonus: 0
+  defaultMaterial: {fileID: -3276526885993196451, guid: 777a7394850f5a54e8ca0911c5c07b20, type: 3}
+  minimapColor: {r: 1, g: 1, b: 1, a: 1}
+  baseHeight: 0
+  possibleResources: []

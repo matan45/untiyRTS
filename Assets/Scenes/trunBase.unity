@@ -1127,6 +1127,57 @@ MonoBehaviour:
   m_Spacing: {x: 10, y: 10}
   m_Constraint: 0
   m_ConstraintCount: 2
+--- !u!1 &598585645
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 598585646}
+  - component: {fileID: 598585647}
+  m_Layer: 0
+  m_Name: UIMessageDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &598585646
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 598585645}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -22.00183, y: 0, z: 1380.5184}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &598585647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 598585645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed068cade150b64cbd08ae29844e10b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.UI.UIMessageDisplay
+  messageText: {fileID: 0}
+  messageContainer: {fileID: 0}
+  displayDuration: 3
+  fadeOutDuration: 0.5
+  errorColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  warningColor: {r: 1, g: 0.8, b: 0, a: 1}
+  infoColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &632459142
 GameObject:
   m_ObjectHideFlags: 0
@@ -1347,8 +1398,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d4ae1ee99f9fb4489328a89d276787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Hex3DTerrainGenerator
-  mapWidth: 20
-  mapHeight: 20
+  mapWidth: 50
+  mapHeight: 50
   hexSize: 1
   waterHeight: -0.5
   grassHeight: 0
@@ -1374,6 +1425,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee00ee6c35dcc334ea79e1c9db908aa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.HexBuildingPlacer
+  persistAcrossScenes: 0
   mainCamera: {fileID: 632459144}
   validPlacementMaterial: {fileID: 2100000, guid: 8c54a2aeb31243643a508701d902981b, type: 2}
   invalidPlacementMaterial: {fileID: 2100000, guid: a2dbe0e2432c1434dbb889cf6df5e109, type: 2}
@@ -1381,6 +1433,8 @@ MonoBehaviour:
   terrainLayer:
     serializedVersion: 2
     m_Bits: 1
+  updateInterval: 1
+  useInputSystemActions: 1
 --- !u!1 &659782968
 GameObject:
   m_ObjectHideFlags: 0
@@ -1777,6 +1831,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4df1e77f4943684fa77a258fee37cc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.UI.UnitsMenu
+  persistAcrossScenes: 0
   buttonContainer: {fileID: 437012421}
   unitButtonPrefab: {fileID: 1442082376}
   availableUnits:
@@ -2553,6 +2608,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 649153068533c8942b0dc162d1a5d9d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.UI.TurnBasedBuildingMenu
+  persistAcrossScenes: 0
   buttonContainer: {fileID: 1604955736}
   buildingButtonPrefab: {fileID: 1376059000}
   creditsText: {fileID: 1110198190}
@@ -2898,7 +2954,7 @@ GameObject:
   - component: {fileID: 1791548328}
   - component: {fileID: 1791548330}
   m_Layer: 0
-  m_Name: Managers
+  m_Name: HexGridManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2931,6 +2987,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d6c485bed1b50849b13b327be973eff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Buildings.BuildingManager
+  persistAcrossScenes: 0
 --- !u!114 &1791548329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2943,6 +3000,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47fd4d801da2c6347b644ca98a538deb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResourceManager
+  persistAcrossScenes: 0
   startingCredits: 5000
   startingPower: 100
 --- !u!114 &1791548330
@@ -2957,9 +3015,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad4f1f2d68d69b24a896e4ceebcaa086, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Core.HexGridManager
+  persistAcrossScenes: 0
   gridWidth: 50
   gridHeight: 50
   hexSize: 1
+  terrainRegistry: {fileID: 11400000, guid: c456b96af5585fe41a825af120385b30, type: 2}
 --- !u!1 &1855767679
 GameObject:
   m_ObjectHideFlags: 0
@@ -3913,3 +3973,4 @@ SceneRoots:
   - {fileID: 2855139851226311694}
   - {fileID: 878916326}
   - {fileID: 56891763}
+  - {fileID: 598585646}
