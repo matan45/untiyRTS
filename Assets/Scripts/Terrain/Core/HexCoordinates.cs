@@ -28,17 +28,29 @@ namespace RTS.Terrain.Core
         /// <summary>
         /// Get coordinates of all 6 neighboring hexes.
         /// Does not validate if coordinates exist in any grid.
+        /// Note: Allocates a new array. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="center">The center hex coordinate</param>
         /// <returns>Array of 6 neighbor coordinates</returns>
         public static Vector2Int[] GetNeighborCoordinates(Vector2Int center)
         {
             Vector2Int[] neighbors = new Vector2Int[6];
+            GetNeighborCoordinates(center, neighbors);
+            return neighbors;
+        }
+
+        /// <summary>
+        /// Get coordinates of all 6 neighboring hexes (non-allocating).
+        /// Use this overload in performance-critical code like pathfinding.
+        /// </summary>
+        /// <param name="center">The center hex coordinate</param>
+        /// <param name="output">Pre-allocated array of at least 6 elements to store results</param>
+        public static void GetNeighborCoordinates(Vector2Int center, Vector2Int[] output)
+        {
             for (int i = 0; i < 6; i++)
             {
-                neighbors[i] = center + NeighborDirections[i];
+                output[i] = center + NeighborDirections[i];
             }
-            return neighbors;
         }
 
         /// <summary>

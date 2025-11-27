@@ -61,32 +61,58 @@ namespace RTS.Terrain.Core
             return tiles.Values;
         }
 
+        // Shared buffer for non-allocating neighbor coordinate lookups
+        [System.ThreadStatic]
+        private static Vector2Int[] _neighborCoordsBuffer;
+
+        private static Vector2Int[] NeighborCoordsBuffer
+        {
+            get
+            {
+                _neighborCoordsBuffer ??= new Vector2Int[6];
+                return _neighborCoordsBuffer;
+            }
+        }
+
         /// <summary>
         /// Get all valid neighboring tiles for a given coordinate.
         /// Only returns tiles that exist in the grid.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="coordinates">The center hex coordinate</param>
         /// <returns>List of existing neighbor tiles (0-6 tiles)</returns>
         public List<HexTile> GetNeighbors(Vector2Int coordinates)
         {
             List<HexTile> neighbors = new List<HexTile>(6);
-            Vector2Int[] neighborCoords = HexCoordinates.GetNeighborCoordinates(coordinates);
+            GetNeighbors(coordinates, neighbors);
+            return neighbors;
+        }
 
-            foreach (Vector2Int coord in neighborCoords)
+        /// <summary>
+        /// Get all valid neighboring tiles for a given coordinate (non-allocating).
+        /// Use this overload in performance-critical code like pathfinding.
+        /// </summary>
+        /// <param name="coordinates">The center hex coordinate</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetNeighbors(Vector2Int coordinates, List<HexTile> output)
+        {
+            output.Clear();
+            HexCoordinates.GetNeighborCoordinates(coordinates, NeighborCoordsBuffer);
+
+            for (int i = 0; i < 6; i++)
             {
-                HexTile tile = GetTile(coord);
+                HexTile tile = GetTile(NeighborCoordsBuffer[i]);
                 if (tile != null)
                 {
-                    neighbors.Add(tile);
+                    output.Add(tile);
                 }
             }
-
-            return neighbors;
         }
 
         /// <summary>
         /// Get all valid neighboring tiles for a given tile.
         /// Convenience overload that extracts coordinates from tile.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="tile">The center tile</param>
         /// <returns>List of existing neighbor tiles (0-6 tiles)</returns>
@@ -94,6 +120,22 @@ namespace RTS.Terrain.Core
         {
             if (tile == null) return new List<HexTile>();
             return GetNeighbors(tile.Coordinates);
+        }
+
+        /// <summary>
+        /// Get all valid neighboring tiles for a given tile (non-allocating).
+        /// Use this overload in performance-critical code like pathfinding.
+        /// </summary>
+        /// <param name="tile">The center tile</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetNeighbors(HexTile tile, List<HexTile> output)
+        {
+            if (tile == null)
+            {
+                output.Clear();
+                return;
+            }
+            GetNeighbors(tile.Coordinates, output);
         }
     }
 }
