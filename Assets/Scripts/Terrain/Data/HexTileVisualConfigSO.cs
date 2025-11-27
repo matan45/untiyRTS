@@ -38,7 +38,7 @@ namespace RTS.Terrain.Data
         [Tooltip("Alpha range for pulse animation (min, max)")]
         public Vector2 pulseAlphaRange = new Vector2(0.2f, 0.4f);
 
-        [Header("Tile Rendering")]
+        [Header("Tile Mesh Settings")]
         [Tooltip("Default tile height (cylinder thickness)")]
         [Range(0.1f, 1f)]
         public float defaultTileHeight = 0.3f;
@@ -46,6 +46,21 @@ namespace RTS.Terrain.Data
         [Tooltip("Number of vertices around hex circumference (6 = flat edges, higher = smoother)")]
         [Range(6, 36)]
         public int hexVertexCount = 6;
+
+        [Header("Bevel Settings")]
+        [Tooltip("Size of the beveled edge on tile corners")]
+        [Range(0f, 0.15f)]
+        public float bevelSize = 0.05f;
+
+        [Header("Border Settings")]
+        [Tooltip("Width of the border/outline on the top surface")]
+        [Range(0f, 0.2f)]
+        public float borderWidth = 0.08f;
+
+        [Header("Top Surface Detail")]
+        [Tooltip("Depth of the center depression on the top surface")]
+        [Range(0f, 0.1f)]
+        public float centerDepth = 0.02f;
 
         /// <summary>
         /// Get the effective hover material (falls back to selection material).

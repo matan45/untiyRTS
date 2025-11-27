@@ -151,17 +151,34 @@ namespace RTS.Terrain.Core
 
         /// <summary>
         /// Get terrain type from noise value.
+        /// Uses multiple noise samples for varied terrain distribution.
         /// </summary>
         private TerrainType GetTerrainFromNoise(float noise)
         {
-            if (noise < 0.25f)
+            // Water types (low elevation)
+            if (noise < 0.15f)
+                return TerrainType.DeepWater;
+            else if (noise < 0.25f)
                 return TerrainType.Water;
+            else if (noise < 0.30f)
+                return TerrainType.Swamp;
+            // Low elevation land
             else if (noise < 0.45f)
                 return TerrainType.Grassland;
-            else if (noise < 0.6f)
+            else if (noise < 0.55f)
                 return TerrainType.Plains;
-            else if (noise < 0.8f)
+            else if (noise < 0.62f)
+                return TerrainType.Forest;
+            // Mid elevation
+            else if (noise < 0.70f)
+                return TerrainType.Desert;
+            else if (noise < 0.78f)
                 return TerrainType.Hills;
+            // High elevation
+            else if (noise < 0.85f)
+                return TerrainType.Tundra;
+            else if (noise < 0.92f)
+                return TerrainType.Snow;
             else
                 return TerrainType.Mountains;
         }

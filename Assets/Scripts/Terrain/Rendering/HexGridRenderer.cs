@@ -100,9 +100,19 @@ namespace RTS.Terrain.Rendering
         {
             int vertexCount = visualConfig != null ? visualConfig.hexVertexCount : 6;
             float height = visualConfig != null ? visualConfig.defaultTileHeight : 0.3f;
+            float bevelSize = visualConfig != null ? visualConfig.bevelSize : 0.05f;
+            float borderWidth = visualConfig != null ? visualConfig.borderWidth : 0.08f;
+            float centerDepth = visualConfig != null ? visualConfig.centerDepth : 0.02f;
             float size = HexCoordinates.HexSize;
 
-            _hexMesh = HexMeshGenerator.CreateFlatTopHexCylinder(size, height, vertexCount);
+            _hexMesh = HexMeshGenerator.CreateFlatTopHexCylinder(
+                size,
+                height,
+                vertexCount,
+                bevelSize,
+                borderWidth,
+                centerDepth
+            );
             _hexMesh.name = "HexTileMesh";
         }
 
@@ -363,107 +373,215 @@ namespace RTS.Terrain.Rendering
     }
 
     /// <summary>
-    /// Utility class for generating hex meshes.
+    /// Utility class for generating hex meshes with visual enhancements.
     /// </summary>
     public static class HexMeshGenerator
     {
         /// <summary>
-        /// Create a flat-top hexagonal cylinder mesh.
+        /// Create a flat-top hexagonal cylinder mesh with beveled edges, border, and top detail.
         /// </summary>
         /// <param name="radius">Outer radius of the hex</param>
         /// <param name="height">Height of the cylinder</param>
-        /// <param name="segments">Number of segments around the circumference</param>
-        public static Mesh CreateFlatTopHexCylinder(float radius, float height, int segments = 6)
+        /// <param name="segments">Number of segments (6 for hex, higher for smoother)</param>
+        /// <param name="bevelSize">Size of the bevel (0 = no bevel)</param>
+        /// <param name="borderWidth">Width of the border inset on top (0 = no border)</param>
+        /// <param name="centerDepth">Depth of center depression for top detail (0 = flat)</param>
+        public static Mesh CreateFlatTopHexCylinder(
+            float radius,
+            float height,
+            int segments = 6,
+            float bevelSize = 0.05f,
+            float borderWidth = 0.08f,
+            float centerDepth = 0.02f)
         {
             var mesh = new Mesh();
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
             var normals = new List<Vector3>();
             var uvs = new List<Vector2>();
+            var colors = new List<Color>();
 
-            // Ensure segments is at least 6 for a hex
             segments = Mathf.Max(6, segments);
 
-            // Top center vertex
-            vertices.Add(new Vector3(0, height, 0));
+            float innerRadius = radius - borderWidth;
+            float bevelHeight = height - bevelSize;
+            float bevelRadius = radius - bevelSize;
+
+            // === TOP SURFACE WITH DETAIL ===
+
+            // Center vertex (slightly depressed for detail)
+            int centerIdx = vertices.Count;
+            vertices.Add(new Vector3(0, height - centerDepth, 0));
             normals.Add(Vector3.up);
             uvs.Add(new Vector2(0.5f, 0.5f));
+            colors.Add(Color.white);
 
-            // Bottom center vertex
-            vertices.Add(new Vector3(0, 0, 0));
-            normals.Add(Vector3.down);
-            uvs.Add(new Vector2(0.5f, 0.5f));
-
-            // Generate vertices around the circumference
+            // Inner ring (border inside edge)
+            int innerRingStart = vertices.Count;
             for (int i = 0; i <= segments; i++)
             {
-                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f); // Offset for flat-top
-                float x = Mathf.Cos(angle) * radius;
-                float z = Mathf.Sin(angle) * radius;
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * innerRadius;
+                float z = Mathf.Sin(angle) * innerRadius;
 
-                // Top ring
+                vertices.Add(new Vector3(x, height - centerDepth * 0.5f, z));
+                normals.Add(Vector3.up);
+                uvs.Add(new Vector2((Mathf.Cos(angle) * 0.4f + 0.5f), (Mathf.Sin(angle) * 0.4f + 0.5f)));
+                colors.Add(Color.white);
+            }
+
+            // Outer top ring (at border)
+            int outerTopRingStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * bevelRadius;
+                float z = Mathf.Sin(angle) * bevelRadius;
+
                 vertices.Add(new Vector3(x, height, z));
                 normals.Add(Vector3.up);
                 uvs.Add(new Vector2((Mathf.Cos(angle) + 1) * 0.5f, (Mathf.Sin(angle) + 1) * 0.5f));
+                colors.Add(new Color(0.7f, 0.7f, 0.7f, 1f)); // Darker border
+            }
 
-                // Bottom ring
+            // === BEVEL EDGE ===
+
+            // Bevel top vertices
+            int bevelTopStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * bevelRadius;
+                float z = Mathf.Sin(angle) * bevelRadius;
+
+                Vector3 outward = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                Vector3 bevelNormal = (outward + Vector3.up).normalized;
+
+                vertices.Add(new Vector3(x, height, z));
+                normals.Add(bevelNormal);
+                uvs.Add(new Vector2((float)i / segments, 1f));
+                colors.Add(new Color(0.8f, 0.8f, 0.8f, 1f));
+            }
+
+            // Bevel bottom vertices (where bevel meets side)
+            int bevelBottomStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * radius;
+                float z = Mathf.Sin(angle) * radius;
+
+                Vector3 outward = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                Vector3 bevelNormal = (outward + Vector3.up).normalized;
+
+                vertices.Add(new Vector3(x, bevelHeight, z));
+                normals.Add(bevelNormal);
+                uvs.Add(new Vector2((float)i / segments, 0.9f));
+                colors.Add(new Color(0.9f, 0.9f, 0.9f, 1f));
+            }
+
+            // === SIDE WALL ===
+
+            // Side top vertices
+            int sideTopStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * radius;
+                float z = Mathf.Sin(angle) * radius;
+                Vector3 normal = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+
+                vertices.Add(new Vector3(x, bevelHeight, z));
+                normals.Add(normal);
+                uvs.Add(new Vector2((float)i / segments, 0.85f));
+                colors.Add(Color.white);
+            }
+
+            // Side bottom vertices
+            int sideBottomStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * radius;
+                float z = Mathf.Sin(angle) * radius;
+                Vector3 normal = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+
+                vertices.Add(new Vector3(x, 0, z));
+                normals.Add(normal);
+                uvs.Add(new Vector2((float)i / segments, 0f));
+                colors.Add(new Color(0.6f, 0.6f, 0.6f, 1f)); // Darker at bottom
+            }
+
+            // === BOTTOM FACE ===
+
+            int bottomCenterIdx = vertices.Count;
+            vertices.Add(new Vector3(0, 0, 0));
+            normals.Add(Vector3.down);
+            uvs.Add(new Vector2(0.5f, 0.5f));
+            colors.Add(Color.white);
+
+            int bottomRingStart = vertices.Count;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i * Mathf.PI * 2f / segments) + (Mathf.PI / 6f);
+                float x = Mathf.Cos(angle) * radius;
+                float z = Mathf.Sin(angle) * radius;
+
                 vertices.Add(new Vector3(x, 0, z));
                 normals.Add(Vector3.down);
                 uvs.Add(new Vector2((Mathf.Cos(angle) + 1) * 0.5f, (Mathf.Sin(angle) + 1) * 0.5f));
-
-                // Side vertices (top and bottom) with side-facing normals
-                Vector3 normal = new Vector3(x, 0, z).normalized;
-                vertices.Add(new Vector3(x, height, z));
-                normals.Add(normal);
-                uvs.Add(new Vector2((float)i / segments, 1));
-
-                vertices.Add(new Vector3(x, 0, z));
-                normals.Add(normal);
-                uvs.Add(new Vector2((float)i / segments, 0));
+                colors.Add(Color.white);
             }
 
-            // Generate triangles
-            int vertsPerSegment = 4;
-            int topCenter = 0;
-            int bottomCenter = 1;
-            int ringStart = 2;
+            // === GENERATE TRIANGLES ===
 
             for (int i = 0; i < segments; i++)
             {
-                int current = ringStart + i * vertsPerSegment;
-                int next = ringStart + ((i + 1) % (segments + 1)) * vertsPerSegment;
+                int next = i + 1;
 
-                // Top face triangle
-                triangles.Add(topCenter);
-                triangles.Add(current); // top ring
-                triangles.Add(next);    // next top ring
+                // Top center to inner ring
+                triangles.Add(centerIdx);
+                triangles.Add(innerRingStart + next);
+                triangles.Add(innerRingStart + i);
 
-                // Bottom face triangle (reversed winding)
-                triangles.Add(bottomCenter);
-                triangles.Add(next + 1);    // next bottom ring
-                triangles.Add(current + 1); // bottom ring
+                // Inner ring to outer top ring (border strip)
+                triangles.Add(innerRingStart + i);
+                triangles.Add(innerRingStart + next);
+                triangles.Add(outerTopRingStart + i);
 
-                // Side quad (two triangles)
-                int sideTop = current + 2;
-                int sideBottom = current + 3;
-                int nextSideTop = next + 2;
-                int nextSideBottom = next + 3;
+                triangles.Add(outerTopRingStart + i);
+                triangles.Add(innerRingStart + next);
+                triangles.Add(outerTopRingStart + next);
 
-                // Triangle 1
-                triangles.Add(sideTop);
-                triangles.Add(nextSideTop);
-                triangles.Add(sideBottom);
+                // Bevel face
+                triangles.Add(bevelTopStart + i);
+                triangles.Add(bevelTopStart + next);
+                triangles.Add(bevelBottomStart + i);
 
-                // Triangle 2
-                triangles.Add(sideBottom);
-                triangles.Add(nextSideTop);
-                triangles.Add(nextSideBottom);
+                triangles.Add(bevelBottomStart + i);
+                triangles.Add(bevelTopStart + next);
+                triangles.Add(bevelBottomStart + next);
+
+                // Side wall
+                triangles.Add(sideTopStart + i);
+                triangles.Add(sideTopStart + next);
+                triangles.Add(sideBottomStart + i);
+
+                triangles.Add(sideBottomStart + i);
+                triangles.Add(sideTopStart + next);
+                triangles.Add(sideBottomStart + next);
+
+                // Bottom face
+                triangles.Add(bottomCenterIdx);
+                triangles.Add(bottomRingStart + i);
+                triangles.Add(bottomRingStart + next);
             }
 
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.SetNormals(normals);
             mesh.SetUVs(0, uvs);
+            mesh.SetColors(colors);
 
             mesh.RecalculateBounds();
             mesh.Optimize();
