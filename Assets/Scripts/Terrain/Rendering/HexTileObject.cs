@@ -6,14 +6,14 @@ namespace RTS.Terrain.Rendering
     /// <summary>
     /// Component attached to each hex tile GameObject.
     /// Links the visual representation to the HexTile data model.
+    /// Works with both traditional rendering and GPU instancing modes.
     /// </summary>
-    [RequireComponent(typeof(MeshRenderer))]
-    [RequireComponent(typeof(MeshFilter))]
     public class HexTileObject : MonoBehaviour
     {
         private HexTile _tileData;
         private MeshRenderer _meshRenderer;
         private MeshFilter _meshFilter;
+        private MeshCollider _meshCollider;
         private MaterialPropertyBlock _propertyBlock;
 
         /// <summary>
@@ -61,6 +61,7 @@ namespace RTS.Terrain.Rendering
         {
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshFilter = GetComponent<MeshFilter>();
+            _meshCollider = GetComponent<MeshCollider>();
             _propertyBlock = new MaterialPropertyBlock();
         }
 
@@ -80,9 +81,15 @@ namespace RTS.Terrain.Rendering
         /// </summary>
         public float GetTopSurfaceY()
         {
+            // Try MeshFilter first (traditional mode)
             if (_meshFilter != null && _meshFilter.sharedMesh != null)
             {
                 return transform.position.y + _meshFilter.sharedMesh.bounds.max.y * transform.localScale.y;
+            }
+            // Fall back to MeshCollider (GPU instancing mode)
+            if (_meshCollider != null && _meshCollider.sharedMesh != null)
+            {
+                return transform.position.y + _meshCollider.sharedMesh.bounds.max.y * transform.localScale.y;
             }
             return transform.position.y;
         }

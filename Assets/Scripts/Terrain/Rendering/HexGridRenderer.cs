@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using RTS.Terrain.Core;
 using RTS.Terrain.Data;
 
 namespace RTS.Terrain.Rendering
 {
     /// <summary>
-    /// Renders hex grid tiles as 3D mesh objects.
+    /// Renders hex grid tiles using GPU instancing for performance.
     /// Creates procedural hex cylinder meshes with terrain-based materials and heights.
     /// </summary>
     public class HexGridRenderer : MonoBehaviour
@@ -30,6 +31,9 @@ namespace RTS.Terrain.Rendering
         [Range(0, 500)]
         private int tilesPerFrame = 100;
 
+        [SerializeField, Tooltip("Use GPU instancing for rendering (major performance improvement)")]
+        private bool useGPUInstancing = true;
+
         [Header("Debug")]
         [SerializeField]
         private bool showDebugInfo;
@@ -38,6 +42,9 @@ namespace RTS.Terrain.Rendering
         private Mesh _hexMesh;
         private bool _isRendering;
         private int _hexTileLayer;
+
+        // GPU Instancing data
+        private Dictionary<Material, List<Matrix4x4>> _instanceMatrices = new Dictionary<Material, List<Matrix4x4>>();
 
         // Fallback colors when no material is configured
         private static readonly Dictionary<TerrainType, Color> FallbackColors = new Dictionary<TerrainType, Color>
@@ -111,6 +118,43 @@ namespace RTS.Terrain.Rendering
                 centerDepth
             );
             _hexMesh.name = "HexTileMesh";
+        }
+
+        private void LateUpdate()
+        {
+            if (useGPUInstancing && _instanceMatrices.Count > 0)
+            {
+                RenderInstancedTiles();
+            }
+        }
+
+        /// <summary>
+        /// Render all tiles using GPU instancing.
+        /// </summary>
+        private void RenderInstancedTiles()
+        {
+            foreach (var kvp in _instanceMatrices)
+            {
+                Material material = kvp.Key;
+                List<Matrix4x4> matrices = kvp.Value;
+
+                if (matrices.Count == 0) continue;
+
+                var rp = new RenderParams(material)
+                {
+                    layer = _hexTileLayer,
+                    shadowCastingMode = ShadowCastingMode.On,
+                    receiveShadows = true
+                };
+
+                // RenderMeshInstanced supports up to 1023 instances per call
+                int batchSize = 1023;
+                for (int i = 0; i < matrices.Count; i += batchSize)
+                {
+                    int count = Mathf.Min(batchSize, matrices.Count - i);
+                    Graphics.RenderMeshInstanced(rp, _hexMesh, 0, matrices, count, i);
+                }
+            }
         }
 
         /// <summary>
@@ -198,17 +242,6 @@ namespace RTS.Terrain.Rendering
 
             // Add collider for raycasting
             var collider = go.AddComponent<MeshCollider>();
-
-            // Add mesh components
-            var meshFilter = go.AddComponent<MeshFilter>();
-            var meshRenderer = go.AddComponent<MeshRenderer>();
-
-            // Add tile object component
-            var tileObj = go.AddComponent<HexTileObject>();
-            tileObj.Initialize(tile);
-
-            // Set mesh
-            meshFilter.sharedMesh = _hexMesh;
             collider.sharedMesh = _hexMesh;
 
             // Position the tile
@@ -217,24 +250,57 @@ namespace RTS.Terrain.Rendering
             position.y = terrainHeight;
             go.transform.position = position;
 
-            // Apply material (GPU instancing should be enabled on the material asset itself)
-            Material material = GetTerrainMaterial(tile.TerrainType);
-            if (material != null)
+            // Get material for this terrain type
+            Material material = GetTerrainMaterial(tile.TerrainType) ?? defaultMaterial;
+
+            if (useGPUInstancing && material != null)
             {
-                meshRenderer.sharedMaterial = material;
+                // GPU Instancing mode: store transform matrix for batched rendering
+                AddToInstanceBatch(material, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
+
+                // Add lightweight tile object (no MeshRenderer needed)
+                var tileObj = go.AddComponent<HexTileObject>();
+                tileObj.Initialize(tile);
+                _tileObjects[tile.Coordinates] = tileObj;
+                return tileObj;
             }
             else
             {
-                // Use fallback color
-                meshRenderer.sharedMaterial = defaultMaterial;
-                if (defaultMaterial != null)
+                // Traditional mode: individual MeshRenderer per tile
+                var meshFilter = go.AddComponent<MeshFilter>();
+                var meshRenderer = go.AddComponent<MeshRenderer>();
+
+                var tileObj = go.AddComponent<HexTileObject>();
+                tileObj.Initialize(tile);
+
+                meshFilter.sharedMesh = _hexMesh;
+
+                if (material != null)
                 {
+                    meshRenderer.sharedMaterial = material;
+                }
+                else if (defaultMaterial != null)
+                {
+                    meshRenderer.sharedMaterial = defaultMaterial;
                     tileObj.RefreshVisualColor(GetFallbackColor(tile.TerrainType));
                 }
-            }
 
-            _tileObjects[tile.Coordinates] = tileObj;
-            return tileObj;
+                _tileObjects[tile.Coordinates] = tileObj;
+                return tileObj;
+            }
+        }
+
+        /// <summary>
+        /// Add a tile transform to the GPU instancing batch for a material.
+        /// </summary>
+        private void AddToInstanceBatch(Material material, Matrix4x4 matrix)
+        {
+            if (!_instanceMatrices.TryGetValue(material, out var matrices))
+            {
+                matrices = new List<Matrix4x4>();
+                _instanceMatrices[material] = matrices;
+            }
+            matrices.Add(matrix);
         }
 
         /// <summary>
@@ -339,6 +405,13 @@ namespace RTS.Terrain.Rendering
             }
 
             _tileObjects.Clear();
+
+            // Clear GPU instancing data
+            foreach (var matrices in _instanceMatrices.Values)
+            {
+                matrices.Clear();
+            }
+            _instanceMatrices.Clear();
         }
 
         /// <summary>

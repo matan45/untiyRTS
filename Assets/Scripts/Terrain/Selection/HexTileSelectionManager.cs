@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using RTS.Terrain.Core;
 using RTS.Terrain.Rendering;
@@ -35,11 +36,6 @@ namespace RTS.Terrain.Selection
         [SerializeField, Tooltip("Clear selection on right-click")]
         private bool clearOnRightClick = true;
 
-        [SerializeField, Tooltip("Block selection during building placement (for future use)")]
-        #pragma warning disable CS0414
-        private bool blockDuringBuildingPlacement = true;
-        #pragma warning restore CS0414
-
         /// <summary>
         /// Event fired when a tile is selected.
         /// </summary>
@@ -63,6 +59,7 @@ namespace RTS.Terrain.Selection
         private HexTile _selectedTile;
         private HexTile _hoveredTile;
         private bool _isSelectionBlocked;
+        private bool _selectPending;
 
         /// <summary>
         /// Currently selected tile.
@@ -138,6 +135,13 @@ namespace RTS.Terrain.Selection
                 UpdateHover();
             }
 
+            // Process pending selection (deferred from InputAction callback)
+            if (_selectPending)
+            {
+                _selectPending = false;
+                TrySelectTileUnderMouse();
+            }
+
             // Handle left-click for selection (fallback if no InputAction assigned)
             if (selectAction == null || selectAction.action == null)
             {
@@ -158,7 +162,8 @@ namespace RTS.Terrain.Selection
         {
             if (_isSelectionBlocked) return;
 
-            TrySelectTileUnderMouse();
+            // Defer selection to Update to avoid IsPointerOverGameObject() issues
+            _selectPending = true;
         }
 
         /// <summary>
@@ -167,12 +172,21 @@ namespace RTS.Terrain.Selection
         public void TrySelectTileUnderMouse()
         {
             if (_isSelectionBlocked) return;
+            if (IsPointerOverUI()) return;
 
             HexTile tile = GetTileUnderMouse();
             if (tile != null)
             {
                 SelectTile(tile);
             }
+        }
+
+        /// <summary>
+        /// Check if the mouse pointer is over a UI element.
+        /// </summary>
+        private bool IsPointerOverUI()
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
 
         /// <summary>
