@@ -1348,7 +1348,6 @@ GameObject:
   m_Component:
   - component: {fileID: 635087546}
   - component: {fileID: 635087545}
-  - component: {fileID: 635087547}
   - component: {fileID: 635087548}
   m_Layer: 0
   m_Name: HexGridSystem
@@ -1386,33 +1385,6 @@ Transform:
   - {fileID: 1316492070}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &635087547
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 635087542}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07d4ae1ee99f9fb4489328a89d276787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Hex3DTerrainGenerator
-  mapWidth: 50
-  mapHeight: 50
-  hexSize: 1
-  waterHeight: -0.5
-  grassHeight: 0
-  plainsHeight: 0.1
-  hillsHeight: 0.5
-  mountainHeight: 1.2
-  waterMaterial: {fileID: 2100000, guid: ddddf6c78fb727645b3b54ba88d54753, type: 2}
-  grassMaterial: {fileID: 2100000, guid: e1a6382c4a21302489bedbf63be93e59, type: 2}
-  plainsMaterial: {fileID: 2100000, guid: 547ae0b00993248468ff5164b5e7dc3f, type: 2}
-  hillsMaterial: {fileID: 2100000, guid: 74bced3a9215d93419661f003571e3e3, type: 2}
-  mountainMaterial: {fileID: 2100000, guid: c1c8a90dd4e3a0447b8c85e0a963c274, type: 2}
-  noiseScale: 0.1
-  generateOnStart: 1
 --- !u!114 &635087548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1510,6 +1482,75 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 659782968}
   m_CullTransparentMesh: 1
+--- !u!1 &723575103
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 723575106}
+  - component: {fileID: 723575105}
+  - component: {fileID: 723575104}
+  m_Layer: 0
+  m_Name: HexTileSelectionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &723575104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723575103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 281ca54bd8188494186f166892b08d83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Selection.HexTileSelectionVisual
+  visualConfig: {fileID: 11400000, guid: b195e81cf82d1254aae9206db2008e0a, type: 2}
+  selectionManager: {fileID: 723575105}
+  initialPoolSize: 5
+--- !u!114 &723575105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723575103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dde148d35a793f4fa5c0c68bcabc95f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Selection.HexTileSelectionManager
+  raycastCamera: {fileID: 632459144}
+  hexTileLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  maxRaycastDistance: 1000
+  selectAction: {fileID: -2906205436594718853, guid: f03c3e75d3540d147820bc2f3093a618, type: 3}
+  enableHover: 1
+  clearOnRightClick: 1
+  blockDuringBuildingPlacement: 1
+--- !u!4 &723575106
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723575103}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -22.00183, y: 0, z: 1380.5184}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &834939513
 GameObject:
   m_ObjectHideFlags: 0
@@ -2953,6 +2994,7 @@ GameObject:
   - component: {fileID: 1791548329}
   - component: {fileID: 1791548328}
   - component: {fileID: 1791548330}
+  - component: {fileID: 1791548331}
   m_Layer: 0
   m_Name: HexGridManager
   m_TagString: Untagged
@@ -3020,6 +3062,29 @@ MonoBehaviour:
   gridHeight: 50
   hexSize: 1
   terrainRegistry: {fileID: 11400000, guid: c456b96af5585fe41a825af120385b30, type: 2}
+  noiseScale: 0.1
+  generateOnStart: 1
+  gridRenderer: {fileID: 1791548331}
+  autoRenderGrid: 1
+--- !u!114 &1791548331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1791548326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fa85ffc1909fe54d934f93c0fbd3bd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Rendering.HexGridRenderer
+  visualConfig: {fileID: 11400000, guid: b195e81cf82d1254aae9206db2008e0a, type: 2}
+  terrainRegistry: {fileID: 11400000, guid: c456b96af5585fe41a825af120385b30, type: 2}
+  defaultMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  tileContainer: {fileID: 0}
+  tilesPerFrame: 100
+  useGPUInstancing: 1
+  showDebugInfo: 0
 --- !u!1 &1855767679
 GameObject:
   m_ObjectHideFlags: 0
@@ -3974,3 +4039,4 @@ SceneRoots:
   - {fileID: 878916326}
   - {fileID: 56891763}
   - {fileID: 598585646}
+  - {fileID: 723575106}
