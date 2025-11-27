@@ -60,5 +60,40 @@ namespace RTS.Terrain.Core
         {
             return tiles.Values;
         }
+
+        /// <summary>
+        /// Get all valid neighboring tiles for a given coordinate.
+        /// Only returns tiles that exist in the grid.
+        /// </summary>
+        /// <param name="coordinates">The center hex coordinate</param>
+        /// <returns>List of existing neighbor tiles (0-6 tiles)</returns>
+        public List<HexTile> GetNeighbors(Vector2Int coordinates)
+        {
+            List<HexTile> neighbors = new List<HexTile>(6);
+            Vector2Int[] neighborCoords = HexCoordinates.GetNeighborCoordinates(coordinates);
+
+            foreach (Vector2Int coord in neighborCoords)
+            {
+                HexTile tile = GetTile(coord);
+                if (tile != null)
+                {
+                    neighbors.Add(tile);
+                }
+            }
+
+            return neighbors;
+        }
+
+        /// <summary>
+        /// Get all valid neighboring tiles for a given tile.
+        /// Convenience overload that extracts coordinates from tile.
+        /// </summary>
+        /// <param name="tile">The center tile</param>
+        /// <returns>List of existing neighbor tiles (0-6 tiles)</returns>
+        public List<HexTile> GetNeighbors(HexTile tile)
+        {
+            if (tile == null) return new List<HexTile>();
+            return GetNeighbors(tile.Coordinates);
+        }
     }
 }

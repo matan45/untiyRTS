@@ -12,6 +12,47 @@ namespace RTS.Terrain.Core
         public static float HexSize = 1f;
 
         /// <summary>
+        /// Direction offsets for 6 neighbors of a flat-top hex (axial coordinates).
+        /// Order: East, Northeast, Northwest, West, Southwest, Southeast (clockwise from East)
+        /// </summary>
+        public static readonly Vector2Int[] NeighborDirections = new Vector2Int[]
+        {
+            new Vector2Int(+1,  0), // East
+            new Vector2Int(+1, -1), // Northeast
+            new Vector2Int( 0, -1), // Northwest
+            new Vector2Int(-1,  0), // West
+            new Vector2Int(-1, +1), // Southwest
+            new Vector2Int( 0, +1)  // Southeast
+        };
+
+        /// <summary>
+        /// Get coordinates of all 6 neighboring hexes.
+        /// Does not validate if coordinates exist in any grid.
+        /// </summary>
+        /// <param name="center">The center hex coordinate</param>
+        /// <returns>Array of 6 neighbor coordinates</returns>
+        public static Vector2Int[] GetNeighborCoordinates(Vector2Int center)
+        {
+            Vector2Int[] neighbors = new Vector2Int[6];
+            for (int i = 0; i < 6; i++)
+            {
+                neighbors[i] = center + NeighborDirections[i];
+            }
+            return neighbors;
+        }
+
+        /// <summary>
+        /// Get a specific neighbor by direction index (0-5, clockwise from East).
+        /// </summary>
+        /// <param name="center">The center hex coordinate</param>
+        /// <param name="direction">Direction index (0=East, 1=NE, 2=NW, 3=West, 4=SW, 5=SE)</param>
+        /// <returns>The neighbor coordinate in the specified direction</returns>
+        public static Vector2Int GetNeighborCoordinate(Vector2Int center, int direction)
+        {
+            return center + NeighborDirections[direction % 6];
+        }
+
+        /// <summary>
         /// Convert axial coordinates (q, r) to world position.
         /// </summary>
         public static Vector3 AxialToWorld(Vector2Int axial)
