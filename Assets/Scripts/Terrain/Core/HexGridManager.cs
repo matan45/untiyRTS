@@ -33,8 +33,13 @@ namespace RTS.Terrain.Core
         [SerializeField, Tooltip("Noise scale for terrain generation")]
         private float noiseScale = 0.1f;
 
+        [SerializeField, Tooltip("Seed for terrain generation (0 = random seed each time)")]
+        private int seed = 0;
+
         [SerializeField, Tooltip("Generate terrain on Start")]
         private bool generateOnStart = true;
+
+        private Vector2 _noiseOffset;
 
         [Header("Rendering")]
         [SerializeField, Tooltip("Grid renderer for creating tile visuals")]
@@ -106,6 +111,11 @@ namespace RTS.Terrain.Core
                 InitializeGrid();
             }
 
+            // Generate noise offset from seed
+            int activeSeed = seed != 0 ? seed : System.Environment.TickCount;
+            var rng = new System.Random(activeSeed);
+            _noiseOffset = new Vector2((float)rng.NextDouble() * 10000f, (float)rng.NextDouble() * 10000f);
+
             // Generate hex tiles with terrain types based on noise
             for (int q = 0; q < gridWidth; q++)
             {
@@ -113,8 +123,8 @@ namespace RTS.Terrain.Core
                 {
                     Vector3 worldPos = HexCoordinates.AxialToWorld(q, r);
 
-                    // Get terrain type based on noise
-                    float noise = Mathf.PerlinNoise(q * noiseScale, r * noiseScale);
+                    // Get terrain type based on noise with offset for variety
+                    float noise = Mathf.PerlinNoise(q * noiseScale + _noiseOffset.x, r * noiseScale + _noiseOffset.y);
                     TerrainType terrainType = GetTerrainFromNoise(noise);
 
                     // Create tile

@@ -42,19 +42,20 @@ namespace RTS.Terrain.Selection
 
         private void Start()
         {
-            SubscribeToSelectionManager();
+            // Subscribe in Start to ensure HexTileSelectionManager.Awake() has run
+            TrySubscribe();
         }
 
         private void OnEnable()
         {
-            // Try to subscribe if we already have a reference
+            // Re-subscribe when re-enabled (if already initialized)
             if (selectionManager != null)
             {
-                SubscribeToSelectionManager();
+                Subscribe();
             }
         }
 
-        private void SubscribeToSelectionManager()
+        private void TrySubscribe()
         {
             if (selectionManager == null)
             {
@@ -63,18 +64,16 @@ namespace RTS.Terrain.Selection
 
             if (selectionManager != null)
             {
-                // Unsubscribe first to avoid duplicate subscriptions
-                selectionManager.OnTileSelected -= OnTileSelected;
-                selectionManager.OnTileDeselected -= OnTileDeselected;
-                selectionManager.OnTileHovered -= OnTileHovered;
-                selectionManager.OnTileHoverExit -= OnTileHoverExit;
-
-                // Subscribe
-                selectionManager.OnTileSelected += OnTileSelected;
-                selectionManager.OnTileDeselected += OnTileDeselected;
-                selectionManager.OnTileHovered += OnTileHovered;
-                selectionManager.OnTileHoverExit += OnTileHoverExit;
+                Subscribe();
             }
+        }
+
+        private void Subscribe()
+        {
+            selectionManager.OnTileSelected += OnTileSelected;
+            selectionManager.OnTileDeselected += OnTileDeselected;
+            selectionManager.OnTileHovered += OnTileHovered;
+            selectionManager.OnTileHoverExit += OnTileHoverExit;
         }
 
         private void OnDisable()
@@ -220,12 +219,12 @@ namespace RTS.Terrain.Selection
             // Set render queue for transparency
             material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
 
-            // Enable URP transparency keywords
+            // Enable URP transparency keyword
             material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
 
             // Disable keywords that might interfere
             material.DisableKeyword("_ALPHATEST_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
 
             return material;
         }
@@ -405,10 +404,10 @@ namespace RTS.Terrain.Selection
             Color color = visualConfig.selectionColor;
             color.a = alpha;
 
-            var renderer = _selectionOverlay.GetComponent<MeshRenderer>();
-            if (renderer != null && renderer.material != null)
+            if (_selectionMaterial != null)
             {
-                renderer.material.color = color;
+                _selectionMaterial.color = color;
+                _selectionMaterial.SetColor("_BaseColor", color);
             }
         }
 

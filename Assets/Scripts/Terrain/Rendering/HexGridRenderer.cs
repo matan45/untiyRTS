@@ -30,9 +30,6 @@ namespace RTS.Terrain.Rendering
         [Range(0, 500)]
         private int tilesPerFrame = 100;
 
-        [SerializeField, Tooltip("Enable GPU instancing for materials")]
-        private bool useGPUInstancing = true;
-
         [Header("Debug")]
         [SerializeField]
         private bool showDebugInfo;
@@ -136,11 +133,6 @@ namespace RTS.Terrain.Rendering
 
             ClearRenderedTiles();
 
-            // Count tiles to render
-            int tileCount = 0;
-            foreach (var _ in grid.GetAllTiles()) tileCount++;
-            Debug.Log($"HexGridRenderer: Starting to render {tileCount} tiles (tilesPerFrame={tilesPerFrame})");
-
             if (tilesPerFrame <= 0)
             {
                 RenderAllTilesImmediate(grid);
@@ -225,15 +217,11 @@ namespace RTS.Terrain.Rendering
             position.y = terrainHeight;
             go.transform.position = position;
 
-            // Apply material
+            // Apply material (GPU instancing should be enabled on the material asset itself)
             Material material = GetTerrainMaterial(tile.TerrainType);
             if (material != null)
             {
                 meshRenderer.sharedMaterial = material;
-                if (useGPUInstancing)
-                {
-                    meshRenderer.sharedMaterial.enableInstancing = true;
-                }
             }
             else
             {
