@@ -3080,7 +3080,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Rendering.HexGridRenderer
   visualConfig: {fileID: 11400000, guid: b195e81cf82d1254aae9206db2008e0a, type: 2}
   terrainRegistry: {fileID: 11400000, guid: c456b96af5585fe41a825af120385b30, type: 2}
-  defaultMaterial: {fileID: 2100000, guid: 4f1302f3d4f487349864cc0064dfaafa, type: 2}
+  defaultMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   tileContainer: {fileID: 0}
   tilesPerFrame: 100
   useGPUInstancing: 1

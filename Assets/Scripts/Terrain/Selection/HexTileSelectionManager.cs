@@ -102,6 +102,13 @@ namespace RTS.Terrain.Selection
                 if (layer >= 0)
                 {
                     hexTileLayerMask = 1 << layer;
+                    Debug.Log($"HexTileSelectionManager: Auto-configured layer mask for 'HexTile' (layer {layer})");
+                }
+                else
+                {
+                    // Fallback to Default layer
+                    hexTileLayerMask = 1; // Layer 0 (Default)
+                    Debug.LogWarning("HexTileSelectionManager: 'HexTile' layer not found! Using Default layer. Selection may not work correctly.");
                 }
             }
         }
@@ -129,6 +136,15 @@ namespace RTS.Terrain.Selection
             if (enableHover && !_isSelectionBlocked)
             {
                 UpdateHover();
+            }
+
+            // Handle left-click for selection (fallback if no InputAction assigned)
+            if (selectAction == null || selectAction.action == null)
+            {
+                if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+                {
+                    TrySelectTileUnderMouse();
+                }
             }
 
             // Handle right-click to clear selection
@@ -223,6 +239,7 @@ namespace RTS.Terrain.Selection
             if (_selectedTile != tile)
             {
                 _selectedTile = tile;
+                Debug.Log($"HexTileSelectionManager: Selected tile at {tile.Coordinates} ({tile.TerrainType})");
                 OnTileSelected?.Invoke(_selectedTile);
             }
         }

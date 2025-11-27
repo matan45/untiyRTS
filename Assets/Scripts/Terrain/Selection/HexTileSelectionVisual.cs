@@ -40,7 +40,21 @@ namespace RTS.Terrain.Selection
             InitializePool();
         }
 
+        private void Start()
+        {
+            SubscribeToSelectionManager();
+        }
+
         private void OnEnable()
+        {
+            // Try to subscribe if we already have a reference
+            if (selectionManager != null)
+            {
+                SubscribeToSelectionManager();
+            }
+        }
+
+        private void SubscribeToSelectionManager()
         {
             if (selectionManager == null)
             {
@@ -49,6 +63,13 @@ namespace RTS.Terrain.Selection
 
             if (selectionManager != null)
             {
+                // Unsubscribe first to avoid duplicate subscriptions
+                selectionManager.OnTileSelected -= OnTileSelected;
+                selectionManager.OnTileDeselected -= OnTileDeselected;
+                selectionManager.OnTileHovered -= OnTileHovered;
+                selectionManager.OnTileHoverExit -= OnTileHoverExit;
+
+                // Subscribe
                 selectionManager.OnTileSelected += OnTileSelected;
                 selectionManager.OnTileDeselected += OnTileDeselected;
                 selectionManager.OnTileHovered += OnTileHovered;
@@ -97,12 +118,14 @@ namespace RTS.Terrain.Selection
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
             var uvs = new List<Vector2>();
+            var normals = new List<Vector3>();
 
             segments = Mathf.Max(6, segments);
 
             // Center vertex
             vertices.Add(Vector3.zero);
             uvs.Add(new Vector2(0.5f, 0.5f));
+            normals.Add(Vector3.up);
 
             // Outer vertices
             for (int i = 0; i <= segments; i++)
@@ -113,20 +136,21 @@ namespace RTS.Terrain.Selection
 
                 vertices.Add(new Vector3(x, 0, z));
                 uvs.Add(new Vector2((Mathf.Cos(angle) + 1) * 0.5f, (Mathf.Sin(angle) + 1) * 0.5f));
+                normals.Add(Vector3.up);
             }
 
-            // Triangles
+            // Triangles - wind counter-clockwise for upward-facing normals
             for (int i = 1; i <= segments; i++)
             {
                 triangles.Add(0);
-                triangles.Add(i);
                 triangles.Add(i + 1);
+                triangles.Add(i);
             }
 
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.SetUVs(0, uvs);
-            mesh.RecalculateNormals();
+            mesh.SetNormals(normals);
             mesh.RecalculateBounds();
 
             return mesh;
@@ -147,8 +171,9 @@ namespace RTS.Terrain.Selection
                 _selectionMaterial = CreateDefaultOverlayMaterial();
             }
 
-            Color selectionColor = visualConfig != null ? visualConfig.selectionColor : new Color(1f, 1f, 0f, 0.3f);
+            Color selectionColor = visualConfig != null ? visualConfig.selectionColor : new Color(1f, 1f, 0f, 0.5f);
             _selectionMaterial.color = selectionColor;
+            _selectionMaterial.SetColor("_BaseColor", selectionColor);
 
             // Hover material
             if (visualConfig != null && visualConfig.GetHoverMaterial() != null)
@@ -160,8 +185,9 @@ namespace RTS.Terrain.Selection
                 _hoverMaterial = CreateDefaultOverlayMaterial();
             }
 
-            Color hoverColor = visualConfig != null ? visualConfig.hoverColor : new Color(1f, 1f, 1f, 0.2f);
+            Color hoverColor = visualConfig != null ? visualConfig.hoverColor : new Color(1f, 1f, 1f, 0.4f);
             _hoverMaterial.color = hoverColor;
+            _hoverMaterial.SetColor("_BaseColor", hoverColor);
         }
 
         /// <summary>
@@ -169,11 +195,11 @@ namespace RTS.Terrain.Selection
         /// </summary>
         private Material CreateDefaultOverlayMaterial()
         {
-            // Try to use URP unlit shader, fallback to standard
-            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            // Try to use URP Lit shader for proper transparency support
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null)
             {
-                shader = Shader.Find("Unlit/Color");
+                shader = Shader.Find("Universal Render Pipeline/Unlit");
             }
             if (shader == null)
             {
@@ -181,15 +207,25 @@ namespace RTS.Terrain.Selection
             }
 
             var material = new Material(shader);
-            material.SetFloat("_Surface", 1); // Transparent
-            material.SetFloat("_Blend", 0); // Alpha blend
-            material.renderQueue = 3000; // Transparent queue
 
-            // Enable transparency
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            material.SetInt("_ZWrite", 0);
-            material.EnableKeyword("_ALPHABLEND_ON");
+            // URP transparency setup
+            material.SetFloat("_Surface", 1); // 0 = Opaque, 1 = Transparent
+            material.SetFloat("_Blend", 0); // 0 = Alpha, 1 = Premultiply, 2 = Additive, 3 = Multiply
+            material.SetFloat("_AlphaClip", 0); // Disable alpha clipping
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_ZWrite", 0);
+            material.SetFloat("_Cull", 0); // Cull Off - render both sides
+
+            // Set render queue for transparency
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+            // Enable URP transparency keywords
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+
+            // Disable keywords that might interfere
+            material.DisableKeyword("_ALPHATEST_ON");
 
             return material;
         }
@@ -286,6 +322,7 @@ namespace RTS.Terrain.Selection
             if (renderer != null)
             {
                 renderer.sharedMaterial = _selectionMaterial;
+                renderer.enabled = true;
             }
 
             PositionOverlay(_selectionOverlay, tile);
@@ -345,9 +382,8 @@ namespace RTS.Terrain.Selection
         /// </summary>
         private void PositionOverlay(GameObject overlay, HexTile tile)
         {
-            float heightOffset = visualConfig != null ? visualConfig.overlayHeightOffset : 0.05f;
+            float heightOffset = visualConfig != null ? visualConfig.overlayHeightOffset : 0.1f;
 
-            // Get tile object for accurate height
             var tileObj = HexGridManager.Instance?.GetTileObject(tile.Coordinates);
             float y = tileObj != null ? tileObj.GetTopSurfaceY() : tile.WorldPosition.y;
 

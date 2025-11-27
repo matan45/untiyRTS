@@ -77,6 +77,11 @@ namespace RTS.Terrain.Rendering
         private void Awake()
         {
             _hexTileLayer = LayerMask.NameToLayer("HexTile");
+            if (_hexTileLayer < 0)
+            {
+                Debug.LogWarning("HexGridRenderer: 'HexTile' layer not found! Tile selection will not work. Please add 'HexTile' layer in Edit > Project Settings > Tags and Layers");
+                _hexTileLayer = 0; // Default layer as fallback
+            }
 
             if (tileContainer == null)
             {
@@ -120,6 +125,11 @@ namespace RTS.Terrain.Rendering
             }
 
             ClearRenderedTiles();
+
+            // Count tiles to render
+            int tileCount = 0;
+            foreach (var _ in grid.GetAllTiles()) tileCount++;
+            Debug.Log($"HexGridRenderer: Starting to render {tileCount} tiles (tilesPerFrame={tilesPerFrame})");
 
             if (tilesPerFrame <= 0)
             {
