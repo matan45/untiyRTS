@@ -139,6 +139,7 @@ namespace RTS.Terrain.Rendering
                 List<Matrix4x4> matrices = kvp.Value;
 
                 if (matrices.Count == 0) continue;
+                if (material == null || !material.enableInstancing) continue;
 
                 var rp = new RenderParams(material)
                 {
@@ -253,7 +254,10 @@ namespace RTS.Terrain.Rendering
             // Get material for this terrain type
             Material material = GetTerrainMaterial(tile.TerrainType) ?? defaultMaterial;
 
-            if (useGPUInstancing && material != null)
+            // Check if we can use GPU instancing (material must support it)
+            bool canUseInstancing = useGPUInstancing && material != null && material.enableInstancing;
+
+            if (canUseInstancing)
             {
                 // GPU Instancing mode: store transform matrix for batched rendering
                 AddToInstanceBatch(material, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));

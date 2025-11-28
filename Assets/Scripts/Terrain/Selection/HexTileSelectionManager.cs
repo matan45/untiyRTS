@@ -253,7 +253,6 @@ namespace RTS.Terrain.Selection
             if (_selectedTile != tile)
             {
                 _selectedTile = tile;
-                Debug.Log($"HexTileSelectionManager: Selected tile at {tile.Coordinates} ({tile.TerrainType})");
                 OnTileSelected?.Invoke(_selectedTile);
             }
         }
