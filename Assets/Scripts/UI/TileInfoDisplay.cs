@@ -131,27 +131,27 @@ namespace RTS.UI
                 return;
             }
 
-            // Update coordinates
+            // Update coordinates with bold label
             if (coordinatesText != null)
             {
-                coordinatesText.text = $"Coordinates: ({tile.Coordinates.x}, {tile.Coordinates.y})";
+                coordinatesText.text = $"<b>Position:</b> ({tile.Coordinates.x}, {tile.Coordinates.y})";
             }
 
-            // Update terrain type
+            // Update terrain type with bold label
             if (terrainTypeText != null)
             {
                 // Prefer display name from config, fallback to enum name
                 string terrainName = tile.TerrainConfig != null
                     ? tile.TerrainConfig.displayName
                     : tile.TerrainType.ToString();
-                terrainTypeText.text = $"Terrain: {terrainName}";
+                terrainTypeText.text = $"<b>Terrain:</b> {terrainName}";
             }
 
-            // Update owner
+            // Update owner with bold label
             if (ownerText != null)
             {
                 string ownerName = tile.OwnerId < 0 ? "Neutral" : $"Player {tile.OwnerId}";
-                ownerText.text = $"Owner: {ownerName}";
+                ownerText.text = $"<b>Owner:</b> {ownerName}";
             }
 
             // Update resources
@@ -169,7 +169,7 @@ namespace RTS.UI
             if (resourcesText == null) return;
 
             _stringBuilder.Clear();
-            _stringBuilder.AppendLine("Resources:");
+            _stringBuilder.AppendLine("<b>Resources:</b>");
 
             bool hasResources = false;
             // Use Resources property for non-allocating iteration
@@ -177,14 +177,14 @@ namespace RTS.UI
             {
                 if (kvp.Value.currentAmount > 0)
                 {
-                    _stringBuilder.AppendLine($"  {kvp.Key}: {kvp.Value.currentAmount}");
+                    _stringBuilder.AppendLine($"  <color=#FFFFFF>{kvp.Key}:</color> {kvp.Value.currentAmount}");
                     hasResources = true;
                 }
             }
 
             if (!hasResources)
             {
-                _stringBuilder.AppendLine("  None");
+                _stringBuilder.AppendLine("  <color=#888888>None</color>");
             }
 
             resourcesText.text = _stringBuilder.ToString().TrimEnd();
@@ -198,14 +198,14 @@ namespace RTS.UI
             if (modifiersText == null) return;
 
             _stringBuilder.Clear();
-            _stringBuilder.AppendLine("Modifiers:");
+            _stringBuilder.AppendLine("<b>Modifiers:</b>");
 
             bool hasModifiers = false;
 
             // Movement cost (only show if not default)
             if (tile.MovementCost != 1f)
             {
-                _stringBuilder.AppendLine($"  Move Cost: {tile.MovementCost:F1}x");
+                _stringBuilder.AppendLine($"  <color=#FFFFFF>Move Cost:</color> {tile.MovementCost:F1}x");
                 hasModifiers = true;
             }
 
@@ -213,27 +213,28 @@ namespace RTS.UI
             if (tile.DefenseBonus != 0)
             {
                 string sign = tile.DefenseBonus > 0 ? "+" : "";
-                _stringBuilder.AppendLine($"  Defense: {sign}{tile.DefenseBonus}");
+                string bonusColor = tile.DefenseBonus > 0 ? "#88CC88" : "#CC8888"; // Green for positive, red for negative
+                _stringBuilder.AppendLine($"  <color=#FFFFFF>Defense:</color> <color={bonusColor}>{sign}{tile.DefenseBonus}</color>");
                 hasModifiers = true;
             }
 
             // Passable status (only show if not passable)
             if (!tile.IsPassable)
             {
-                _stringBuilder.AppendLine("  Impassable");
+                _stringBuilder.AppendLine("  <color=#CC6666>Impassable</color>");
                 hasModifiers = true;
             }
 
             // Buildable status
             if (!tile.IsBuildable)
             {
-                _stringBuilder.AppendLine("  Not Buildable");
+                _stringBuilder.AppendLine("  <color=#CC9966>Not Buildable</color>");
                 hasModifiers = true;
             }
 
             if (!hasModifiers)
             {
-                _stringBuilder.AppendLine("  None");
+                _stringBuilder.AppendLine("  <color=#888888>None</color>");
             }
 
             modifiersText.text = _stringBuilder.ToString().TrimEnd();
