@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 0
   displayName: Grassland
-  description: 
+  description: Fertile grasslands ideal for farming
   biome: 0
   movementCost: 1
   isBuildable: 1
   isPassable: 1
   defenseBonus: 0
   defaultMaterial: {fileID: 2100000, guid: e1a6382c4a21302489bedbf63be93e59, type: 2}
-  minimapColor: {r: 0.07316296, g: 0.9811321, b: 0, a: 1}
+  minimapColor: {r: 0.4, g: 0.8, b: 0.2, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 1
+    baseYield: 3
+    yieldMultiplier: 1
+  - resourceType: 2
+    baseYield: 1
+    yieldMultiplier: 1

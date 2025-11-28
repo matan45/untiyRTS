@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 3
   displayName: Tundra
-  description: 
+  description: Frozen tundra with uranium deposits
   biome: 2
-  movementCost: 1
+  movementCost: 1.5
   isBuildable: 1
   isPassable: 1
   defenseBonus: 0
   defaultMaterial: {fileID: -799133387897768016, guid: 777a7394850f5a54e8ca0911c5c07b20, type: 3}
-  minimapColor: {r: 0.9245283, g: 0.76754445, b: 0.07413671, a: 1}
+  minimapColor: {r: 0.7, g: 0.75, b: 0.65, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 6
+    baseYield: 2
+    yieldMultiplier: 1
+  - resourceType: 2
+    baseYield: 1
+    yieldMultiplier: 1

@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 1
   displayName: Plains
-  description: 
+  description: Open plains with good farming potential
   biome: 0
   movementCost: 1
   isBuildable: 1
   isPassable: 1
   defenseBonus: 0
   defaultMaterial: {fileID: 6090855478271163125, guid: 4d1f46a6a701c654386966f3f810a1fd, type: 3}
-  minimapColor: {r: 1, g: 0, b: 0, a: 1}
+  minimapColor: {r: 0.76, g: 0.7, b: 0.5, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 1
+    baseYield: 2
+    yieldMultiplier: 1
+  - resourceType: 2
+    baseYield: 2
+    yieldMultiplier: 1

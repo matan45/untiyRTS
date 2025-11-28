@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 4
   displayName: Snow
-  description: 
+  description: Snow-covered terrain with hidden resources
   biome: 2
-  movementCost: 1
+  movementCost: 1.75
   isBuildable: 1
   isPassable: 1
-  defenseBonus: 0
+  defenseBonus: 1
   defaultMaterial: {fileID: -3276526885993196451, guid: 777a7394850f5a54e8ca0911c5c07b20, type: 3}
-  minimapColor: {r: 1, g: 1, b: 1, a: 1}
+  minimapColor: {r: 0.95, g: 0.95, b: 1, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 6
+    baseYield: 3
+    yieldMultiplier: 1
+  - resourceType: 4
+    baseYield: 1
+    yieldMultiplier: 1

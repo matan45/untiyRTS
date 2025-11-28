@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 5
   displayName: Hills
-  description: 
+  description: Rolling hills with mineral deposits
   biome: 3
-  movementCost: 1
+  movementCost: 1.5
   isBuildable: 1
   isPassable: 1
-  defenseBonus: 0
+  defenseBonus: 2
   defaultMaterial: {fileID: -1523023609223244407, guid: 4d1f46a6a701c654386966f3f810a1fd, type: 3}
-  minimapColor: {r: 0.2558439, g: 0.5943396, b: 0.12615702, a: 1}
+  minimapColor: {r: 0.55, g: 0.45, b: 0.3, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 2
+    baseYield: 2
+    yieldMultiplier: 1
+  - resourceType: 4
+    baseYield: 2
+    yieldMultiplier: 1

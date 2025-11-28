@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 9
   displayName: Forest
-  description: 
+  description: Dense forest with abundant lumber
   biome: 3
-  movementCost: 1
+  movementCost: 1.5
   isBuildable: 1
   isPassable: 1
-  defenseBonus: 0
+  defenseBonus: 1
   defaultMaterial: {fileID: 6090855478271163125, guid: 4d1f46a6a701c654386966f3f810a1fd, type: 3}
-  minimapColor: {r: 0.08923004, g: 0.5849056, b: 0.03034888, a: 1}
+  minimapColor: {r: 0.13, g: 0.55, b: 0.13, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 1
+    baseYield: 1
+    yieldMultiplier: 1
+  - resourceType: 2
+    baseYield: 3
+    yieldMultiplier: 1

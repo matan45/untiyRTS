@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: DeepWater
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 8
-  displayName: DeepWater
-  description: 
+  displayName: Deep Water
+  description: Deep ocean waters
   biome: 2
-  movementCost: 1
+  movementCost: 2
   isBuildable: 0
   isPassable: 0
   defenseBonus: 0
   defaultMaterial: {fileID: 2100000, guid: ddddf6c78fb727645b3b54ba88d54753, type: 2}
-  minimapColor: {r: 0.10691509, g: 0.018111428, b: 0.3490566, a: 1}
+  minimapColor: {r: 0.1, g: 0.3, b: 0.6, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 5
+    baseYield: 2
+    yieldMultiplier: 1

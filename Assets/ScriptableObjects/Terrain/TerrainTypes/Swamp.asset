@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 10
   displayName: Swamp
-  description: 
+  description: Murky swampland with natural gas deposits
   biome: 2
-  movementCost: 1
-  isBuildable: 1
+  movementCost: 2
+  isBuildable: 0
   isPassable: 1
-  defenseBonus: 0
+  defenseBonus: -1
   defaultMaterial: {fileID: 6090855478271163125, guid: 4d1f46a6a701c654386966f3f810a1fd, type: 3}
-  minimapColor: {r: 0.11842964, g: 0.23584908, b: 0.107912086, a: 1}
+  minimapColor: {r: 0.4, g: 0.5, b: 0.3, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 5
+    baseYield: 2
+    yieldMultiplier: 1
+  - resourceType: 1
+    baseYield: 1
+    yieldMultiplier: 1

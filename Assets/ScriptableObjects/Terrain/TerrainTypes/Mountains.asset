@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Data.TerrainTypeDataSO
   terrainType: 6
   displayName: Mountains
-  description: 
+  description: Towering mountains rich in minerals
   biome: 4
-  movementCost: 1
+  movementCost: 3
   isBuildable: 0
-  isPassable: 1
-  defenseBonus: 0
+  isPassable: 0
+  defenseBonus: 3
   defaultMaterial: {fileID: -1523023609223244407, guid: 4d1f46a6a701c654386966f3f810a1fd, type: 3}
-  minimapColor: {r: 0.039215673, g: 0.6677681, b: 0.77254903, a: 1}
+  minimapColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   baseHeight: 0
-  possibleResources: []
+  possibleResources:
+  - resourceType: 4
+    baseYield: 4
+    yieldMultiplier: 1
+  - resourceType: 0
+    baseYield: 1
+    yieldMultiplier: 1

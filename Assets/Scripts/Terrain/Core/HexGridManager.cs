@@ -143,6 +143,7 @@ namespace RTS.Terrain.Core
                         if (config != null)
                         {
                             tile.SetTerrainConfig(config);
+                            InitializeTileResources(tile, config);
                         }
                     }
 
@@ -156,6 +157,23 @@ namespace RTS.Terrain.Core
             if (autoRenderGrid)
             {
                 RenderGrid();
+            }
+        }
+
+        /// <summary>
+        /// Initialize resources on a tile based on its terrain configuration.
+        /// </summary>
+        private void InitializeTileResources(HexTile tile, TerrainTypeDataSO config)
+        {
+            if (config?.possibleResources == null) return;
+
+            foreach (var resourceYield in config.possibleResources)
+            {
+                if (resourceYield.baseYield > 0)
+                {
+                    int effectiveYield = resourceYield.GetEffectiveYield();
+                    tile.SetResourceAmount(resourceYield.resourceType, effectiveYield, effectiveYield);
+                }
             }
         }
 
