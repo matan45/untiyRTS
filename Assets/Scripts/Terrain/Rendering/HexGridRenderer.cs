@@ -46,6 +46,9 @@ namespace RTS.Terrain.Rendering
         // GPU Instancing data
         private Dictionary<Material, List<Matrix4x4>> _instanceMatrices = new Dictionary<Material, List<Matrix4x4>>();
 
+        // Cache for terrain materials (one per terrain type with unique color)
+        private Dictionary<TerrainType, Material> _terrainMaterials = new Dictionary<TerrainType, Material>();
+
         // Fallback colors when no material is configured
         private static readonly Dictionary<TerrainType, Color> FallbackColors = new Dictionary<TerrainType, Color>
         {
@@ -251,47 +254,64 @@ namespace RTS.Terrain.Rendering
             position.y = terrainHeight;
             go.transform.position = position;
 
-            // Get material for this terrain type
-            Material material = GetTerrainMaterial(tile.TerrainType) ?? defaultMaterial;
+            // Create mesh renderer with terrain-colored material
+            var meshFilter = go.AddComponent<MeshFilter>();
+            var meshRenderer = go.AddComponent<MeshRenderer>();
+            meshFilter.sharedMesh = _hexMesh;
 
-            // Check if we can use GPU instancing (material must support it)
-            bool canUseInstancing = useGPUInstancing && material != null && material.enableInstancing;
+            // Get or create material with terrain color from minimapColor
+            Material tileMaterial = GetOrCreateTerrainMaterial(tile.TerrainType);
+            meshRenderer.sharedMaterial = tileMaterial;
 
-            if (canUseInstancing)
+            var tileObj = go.AddComponent<HexTileObject>();
+            tileObj.Initialize(tile);
+
+            _tileObjects[tile.Coordinates] = tileObj;
+            return tileObj;
+        }
+
+        /// <summary>
+        /// Get or create a material for a specific terrain type with its minimapColor.
+        /// </summary>
+        private Material GetOrCreateTerrainMaterial(TerrainType terrainType)
+        {
+            // Return cached material if exists
+            if (_terrainMaterials.TryGetValue(terrainType, out Material existingMat))
             {
-                // GPU Instancing mode: store transform matrix for batched rendering
-                AddToInstanceBatch(material, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
-
-                // Add lightweight tile object (no MeshRenderer needed)
-                var tileObj = go.AddComponent<HexTileObject>();
-                tileObj.Initialize(tile);
-                _tileObjects[tile.Coordinates] = tileObj;
-                return tileObj;
+                return existingMat;
             }
-            else
+
+            // Get color from terrain config or fallback
+            Color terrainColor = GetTerrainColor(terrainType);
+
+            // Create new material instance with the terrain color
+            if (defaultMaterial != null)
             {
-                // Traditional mode: individual MeshRenderer per tile
-                var meshFilter = go.AddComponent<MeshFilter>();
-                var meshRenderer = go.AddComponent<MeshRenderer>();
-
-                var tileObj = go.AddComponent<HexTileObject>();
-                tileObj.Initialize(tile);
-
-                meshFilter.sharedMesh = _hexMesh;
-
-                if (material != null)
-                {
-                    meshRenderer.sharedMaterial = material;
-                }
-                else if (defaultMaterial != null)
-                {
-                    meshRenderer.sharedMaterial = defaultMaterial;
-                    tileObj.RefreshVisualColor(GetFallbackColor(tile.TerrainType));
-                }
-
-                _tileObjects[tile.Coordinates] = tileObj;
-                return tileObj;
+                Material newMat = new Material(defaultMaterial);
+                newMat.name = $"HexTile_{terrainType}";
+                newMat.SetColor("_BaseColor", terrainColor);
+                newMat.SetColor("_Color", terrainColor);
+                _terrainMaterials[terrainType] = newMat;
+                return newMat;
             }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get terrain color from config's minimapColor or fallback.
+        /// </summary>
+        private Color GetTerrainColor(TerrainType terrainType)
+        {
+            if (terrainRegistry != null)
+            {
+                var config = terrainRegistry.GetConfig(terrainType);
+                if (config != null)
+                {
+                    return config.minimapColor;
+                }
+            }
+            return GetFallbackColor(terrainType);
         }
 
         /// <summary>
@@ -416,6 +436,16 @@ namespace RTS.Terrain.Rendering
                 matrices.Clear();
             }
             _instanceMatrices.Clear();
+
+            // Clear cached terrain materials
+            foreach (var mat in _terrainMaterials.Values)
+            {
+                if (mat != null)
+                {
+                    Destroy(mat);
+                }
+            }
+            _terrainMaterials.Clear();
         }
 
         /// <summary>
@@ -434,6 +464,16 @@ namespace RTS.Terrain.Rendering
             {
                 Destroy(_hexMesh);
             }
+
+            // Clean up terrain materials
+            foreach (var mat in _terrainMaterials.Values)
+            {
+                if (mat != null)
+                {
+                    Destroy(mat);
+                }
+            }
+            _terrainMaterials.Clear();
         }
     }
 
