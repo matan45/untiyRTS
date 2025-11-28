@@ -32,7 +32,7 @@ namespace RTS.Editor
             panelRect.anchorMax = new Vector2(0, 0);
             panelRect.pivot = new Vector2(0, 0);
             panelRect.anchoredPosition = new Vector2(20, 20);
-            panelRect.sizeDelta = new Vector2(200, 120);
+            panelRect.sizeDelta = new Vector2(200, 220); // Increased height for resources and modifiers
 
             // Create Panel background
             GameObject panel = new GameObject("Panel");
@@ -69,6 +69,12 @@ namespace RTS.Editor
             // Create Owner text
             CreateTextElement(panel.transform, "OwnerText", "Owner: Neutral", 14, FontStyles.Normal);
 
+            // Create Resources text (multi-line)
+            CreateTextElement(panel.transform, "ResourcesText", "Resources:\n  None", 12, FontStyles.Normal, 50);
+
+            // Create Modifiers text (multi-line)
+            CreateTextElement(panel.transform, "ModifiersText", "Modifiers:\n  None", 12, FontStyles.Normal, 50);
+
             // Add TileInfoDisplay component
             var displayComponent = tileInfoPanel.AddComponent<RTS.UI.TileInfoDisplay>();
 
@@ -78,6 +84,8 @@ namespace RTS.Editor
             so.FindProperty("coordinatesText").objectReferenceValue = panel.transform.Find("CoordinatesText").GetComponent<TextMeshProUGUI>();
             so.FindProperty("terrainTypeText").objectReferenceValue = panel.transform.Find("TerrainTypeText").GetComponent<TextMeshProUGUI>();
             so.FindProperty("ownerText").objectReferenceValue = panel.transform.Find("OwnerText").GetComponent<TextMeshProUGUI>();
+            so.FindProperty("resourcesText").objectReferenceValue = panel.transform.Find("ResourcesText").GetComponent<TextMeshProUGUI>();
+            so.FindProperty("modifiersText").objectReferenceValue = panel.transform.Find("ModifiersText").GetComponent<TextMeshProUGUI>();
             so.ApplyModifiedProperties();
 
             // Select the created object
@@ -86,20 +94,22 @@ namespace RTS.Editor
             Debug.Log("TileInfoPanel created successfully! Panel will appear at bottom-left of screen.");
         }
 
-        private static void CreateTextElement(Transform parent, string name, string defaultText, int fontSize, FontStyles style)
+        private static void CreateTextElement(Transform parent, string name, string defaultText, int fontSize, FontStyles style, float height = 20f)
         {
             GameObject textObj = new GameObject(name);
             textObj.transform.SetParent(parent, false);
 
             RectTransform textRect = textObj.AddComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(180, 20);
+            textRect.sizeDelta = new Vector2(180, height);
 
             TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
             tmp.text = defaultText;
             tmp.fontSize = fontSize;
             tmp.fontStyle = style;
             tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.Left;
+            tmp.alignment = TextAlignmentOptions.TopLeft;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.overflowMode = TextOverflowModes.Truncate;
         }
     }
 }
