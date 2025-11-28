@@ -1,24 +1,33 @@
+using System.Text;
 using UnityEngine;
 using TMPro;
 using RTS.Terrain.Core;
 using RTS.Terrain.Selection;
+using RTS.Terrain.Data;
 
 namespace RTS.UI
 {
     /// <summary>
     /// Displays information about the currently selected hex tile.
-    /// Shows: Coordinates, terrain type, and ownership.
+    /// Shows: Coordinates, terrain type, ownership, resources, and modifiers.
     /// Implements Single Responsibility Principle (SRP) - only displays tile info.
     /// </summary>
     public class TileInfoDisplay : MonoBehaviour
     {
-        [Header("UI Elements")]
+        [Header("Basic Info")]
         [SerializeField] private GameObject panel;
         [SerializeField] private TextMeshProUGUI coordinatesText;
         [SerializeField] private TextMeshProUGUI terrainTypeText;
         [SerializeField] private TextMeshProUGUI ownerText;
 
+        [Header("Resources Section")]
+        [SerializeField] private TextMeshProUGUI resourcesText;
+
+        [Header("Modifiers Section")]
+        [SerializeField] private TextMeshProUGUI modifiersText;
+
         private HexTile _currentTile;
+        private readonly StringBuilder _stringBuilder = new StringBuilder();
 
         private void Awake()
         {
@@ -34,6 +43,12 @@ namespace RTS.UI
 
             if (ownerText == null)
                 ownerText = transform.Find("Panel/OwnerText")?.GetComponent<TextMeshProUGUI>();
+
+            if (resourcesText == null)
+                resourcesText = transform.Find("Panel/ResourcesText")?.GetComponent<TextMeshProUGUI>();
+
+            if (modifiersText == null)
+                modifiersText = transform.Find("Panel/ModifiersText")?.GetComponent<TextMeshProUGUI>();
         }
 
         private void Start()
@@ -128,6 +143,90 @@ namespace RTS.UI
                 string ownerName = tile.OwnerId < 0 ? "Neutral" : $"Player {tile.OwnerId}";
                 ownerText.text = $"Owner: {ownerName}";
             }
+
+            // Update resources
+            UpdateResourcesDisplay(tile);
+
+            // Update modifiers
+            UpdateModifiersDisplay(tile);
+        }
+
+        /// <summary>
+        /// Updates the resources display section.
+        /// </summary>
+        private void UpdateResourcesDisplay(HexTile tile)
+        {
+            if (resourcesText == null) return;
+
+            _stringBuilder.Clear();
+            _stringBuilder.AppendLine("Resources:");
+
+            bool hasResources = false;
+            foreach (ResourceType resourceType in tile.GetResourceTypes())
+            {
+                int amount = tile.GetResourceAmount(resourceType);
+                if (amount > 0)
+                {
+                    _stringBuilder.AppendLine($"  {resourceType}: {amount}");
+                    hasResources = true;
+                }
+            }
+
+            if (!hasResources)
+            {
+                _stringBuilder.AppendLine("  None");
+            }
+
+            resourcesText.text = _stringBuilder.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Updates the modifiers display section.
+        /// </summary>
+        private void UpdateModifiersDisplay(HexTile tile)
+        {
+            if (modifiersText == null) return;
+
+            _stringBuilder.Clear();
+            _stringBuilder.AppendLine("Modifiers:");
+
+            bool hasModifiers = false;
+
+            // Movement cost (only show if not default)
+            if (tile.MovementCost != 1f)
+            {
+                _stringBuilder.AppendLine($"  Move Cost: {tile.MovementCost:F1}x");
+                hasModifiers = true;
+            }
+
+            // Defense bonus (only show if not zero)
+            if (tile.DefenseBonus != 0)
+            {
+                string sign = tile.DefenseBonus > 0 ? "+" : "";
+                _stringBuilder.AppendLine($"  Defense: {sign}{tile.DefenseBonus}");
+                hasModifiers = true;
+            }
+
+            // Passable status (only show if not passable)
+            if (!tile.IsPassable)
+            {
+                _stringBuilder.AppendLine("  Impassable");
+                hasModifiers = true;
+            }
+
+            // Buildable status
+            if (!tile.IsBuildable)
+            {
+                _stringBuilder.AppendLine("  Not Buildable");
+                hasModifiers = true;
+            }
+
+            if (!hasModifiers)
+            {
+                _stringBuilder.AppendLine("  None");
+            }
+
+            modifiersText.text = _stringBuilder.ToString().TrimEnd();
         }
 
         /// <summary>
@@ -145,6 +244,12 @@ namespace RTS.UI
 
             if (ownerText != null)
                 ownerText.text = "";
+
+            if (resourcesText != null)
+                resourcesText.text = "";
+
+            if (modifiersText != null)
+                modifiersText.text = "";
         }
 
         private void ShowPanel()
