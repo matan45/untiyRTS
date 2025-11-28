@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text;
 using UnityEngine;
 using TMPro;
@@ -56,29 +57,38 @@ namespace RTS.UI
             // Subscribe to tile selection events
             if (HexTileSelectionManager.Instance != null)
             {
-                HexTileSelectionManager.Instance.OnTileSelected += OnTileSelected;
-                HexTileSelectionManager.Instance.OnTileDeselected += OnTileDeselected;
+                SubscribeToEvents();
             }
             else
             {
-                Debug.LogWarning("TileInfoDisplay: HexTileSelectionManager.Instance is null. Will retry in Update.");
+                // Retry subscription using coroutine instead of Update loop
+                StartCoroutine(RetrySubscription());
             }
 
             // Hide panel initially
             HidePanel();
         }
 
-        private void Update()
+        /// <summary>
+        /// Coroutine to retry subscription if manager wasn't ready at Start.
+        /// More efficient than checking every frame in Update.
+        /// </summary>
+        private IEnumerator RetrySubscription()
         {
-            // Retry subscription if manager wasn't ready at Start
-            if (HexTileSelectionManager.Instance != null && _currentTile == null)
+            while (HexTileSelectionManager.Instance == null)
             {
-                // Check if we need to subscribe
-                HexTileSelectionManager.Instance.OnTileSelected -= OnTileSelected;
-                HexTileSelectionManager.Instance.OnTileDeselected -= OnTileDeselected;
-                HexTileSelectionManager.Instance.OnTileSelected += OnTileSelected;
-                HexTileSelectionManager.Instance.OnTileDeselected += OnTileDeselected;
+                yield return new WaitForSeconds(0.1f);
             }
+            SubscribeToEvents();
+        }
+
+        /// <summary>
+        /// Subscribe to tile selection events.
+        /// </summary>
+        private void SubscribeToEvents()
+        {
+            HexTileSelectionManager.Instance.OnTileSelected += OnTileSelected;
+            HexTileSelectionManager.Instance.OnTileDeselected += OnTileDeselected;
         }
 
         private void OnDestroy()
@@ -162,12 +172,12 @@ namespace RTS.UI
             _stringBuilder.AppendLine("Resources:");
 
             bool hasResources = false;
-            foreach (ResourceType resourceType in tile.GetResourceTypes())
+            // Use Resources property for non-allocating iteration
+            foreach (var kvp in tile.Resources)
             {
-                int amount = tile.GetResourceAmount(resourceType);
-                if (amount > 0)
+                if (kvp.Value.currentAmount > 0)
                 {
-                    _stringBuilder.AppendLine($"  {resourceType}: {amount}");
+                    _stringBuilder.AppendLine($"  {kvp.Key}: {kvp.Value.currentAmount}");
                     hasResources = true;
                 }
             }

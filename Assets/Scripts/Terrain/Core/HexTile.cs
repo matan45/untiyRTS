@@ -247,6 +247,12 @@ namespace RTS.Terrain.Core
         }
 
         /// <summary>
+        /// Get the resources dictionary for direct iteration (non-allocating).
+        /// Use foreach (var kvp in tile.Resources) for zero-allocation iteration.
+        /// </summary>
+        public IReadOnlyDictionary<ResourceType, TileResourceValue> Resources => _resources;
+
+        /// <summary>
         /// Get resources as array for serialization.
         /// </summary>
         public TileResourceValue[] GetResourcesAsArray()
