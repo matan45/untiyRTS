@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -38,6 +39,12 @@ namespace RTS.Terrain.Core
         /// Check if this tile has an owner.
         /// </summary>
         public bool HasOwner => OwnerId >= 0;
+
+        /// <summary>
+        /// Event fired when ownership changes.
+        /// Parameters: previousOwnerId, newOwnerId
+        /// </summary>
+        public event Action<int, int> OnOwnershipChanged;
 
         /// <summary>
         /// Whether this tile has been explored (visible at least once).
@@ -125,7 +132,11 @@ namespace RTS.Terrain.Core
         /// <param name="playerId">Player ID to set as owner. Use -1 for neutral.</param>
         public void SetOwner(int playerId)
         {
+            if (OwnerId == playerId) return; // No change, avoid event spam
+
+            int previousOwner = OwnerId;
             OwnerId = playerId;
+            OnOwnershipChanged?.Invoke(previousOwner, playerId);
         }
 
         /// <summary>
@@ -133,7 +144,11 @@ namespace RTS.Terrain.Core
         /// </summary>
         public void ClearOwner()
         {
+            if (OwnerId == -1) return; // Already neutral
+
+            int previousOwner = OwnerId;
             OwnerId = -1;
+            OnOwnershipChanged?.Invoke(previousOwner, -1);
         }
 
         /// <summary>
