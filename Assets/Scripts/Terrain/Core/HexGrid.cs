@@ -160,48 +160,93 @@ namespace RTS.Terrain.Core
 
         /// <summary>
         /// Get all tiles visible to a specific player.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="playerId">Player ID to check visibility for</param>
-        /// <returns>Enumerable of visible tiles</returns>
-        public IEnumerable<HexTile> GetVisibleTiles(int playerId)
+        /// <returns>List of visible tiles</returns>
+        public List<HexTile> GetVisibleTiles(int playerId)
         {
+            var result = new List<HexTile>();
+            GetVisibleTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles visible to a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check visibility for</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetVisibleTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
             foreach (var tile in tiles.Values)
             {
                 if (tile.IsVisibleToPlayer(playerId))
                 {
-                    yield return tile;
+                    output.Add(tile);
                 }
             }
         }
 
         /// <summary>
         /// Get all tiles explored by a specific player.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="playerId">Player ID to check exploration for</param>
-        /// <returns>Enumerable of explored tiles</returns>
-        public IEnumerable<HexTile> GetExploredTiles(int playerId)
+        /// <returns>List of explored tiles</returns>
+        public List<HexTile> GetExploredTiles(int playerId)
         {
+            var result = new List<HexTile>();
+            GetExploredTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles explored by a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check exploration for</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetExploredTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
             foreach (var tile in tiles.Values)
             {
                 if (tile.IsExploredByPlayer(playerId))
                 {
-                    yield return tile;
+                    output.Add(tile);
                 }
             }
         }
 
         /// <summary>
         /// Get all tiles not yet explored by a specific player (black fog).
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
         /// </summary>
         /// <param name="playerId">Player ID to check</param>
-        /// <returns>Enumerable of unexplored tiles</returns>
-        public IEnumerable<HexTile> GetUnexploredTiles(int playerId)
+        /// <returns>List of unexplored tiles</returns>
+        public List<HexTile> GetUnexploredTiles(int playerId)
         {
+            var result = new List<HexTile>();
+            GetUnexploredTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles not yet explored by a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetUnexploredTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
             foreach (var tile in tiles.Values)
             {
                 if (!tile.IsExploredByPlayer(playerId))
                 {
-                    yield return tile;
+                    output.Add(tile);
                 }
             }
         }
