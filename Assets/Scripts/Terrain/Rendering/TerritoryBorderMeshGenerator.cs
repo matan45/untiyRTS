@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using RTS.Terrain.Core;
@@ -10,8 +11,37 @@ namespace RTS.Terrain.Rendering
     /// </summary>
     public static class TerritoryBorderMeshGenerator
     {
-        // Cache for partial border meshes by edge mask (64 possible combinations for 6 edges)
-        private static readonly Dictionary<int, Mesh> _meshCache = new Dictionary<int, Mesh>();
+        /// <summary>
+        /// Struct-based cache key for type safety and collision-free hashing.
+        /// </summary>
+        private struct MeshCacheKey : IEquatable<MeshCacheKey>
+        {
+            public float OuterRadius;
+            public float BorderWidth;
+            public int EdgeMask;
+            public int Segments;
+
+            public MeshCacheKey(float outerRadius, float borderWidth, int edgeMask, int segments)
+            {
+                OuterRadius = outerRadius;
+                BorderWidth = borderWidth;
+                EdgeMask = edgeMask;
+                Segments = segments;
+            }
+
+            public bool Equals(MeshCacheKey other) =>
+                Mathf.Approximately(OuterRadius, other.OuterRadius) &&
+                Mathf.Approximately(BorderWidth, other.BorderWidth) &&
+                EdgeMask == other.EdgeMask &&
+                Segments == other.Segments;
+
+            public override bool Equals(object obj) => obj is MeshCacheKey other && Equals(other);
+
+            public override int GetHashCode() => HashCode.Combine(OuterRadius, BorderWidth, EdgeMask, Segments);
+        }
+
+        // Cache for partial border meshes using struct-based keys for collision-free lookups
+        private static readonly Dictionary<MeshCacheKey, Mesh> _meshCache = new Dictionary<MeshCacheKey, Mesh>();
 
         /// <summary>
         /// Create a full hex border ring mesh.
@@ -39,8 +69,8 @@ namespace RTS.Terrain.Rendering
             // Clamp to valid edge mask (6 bits)
             edgeMask &= 0b111111;
 
-            // Create cache key including all parameters
-            int cacheKey = edgeMask | (segments << 6) | ((int)(outerRadius * 100) << 12) | ((int)(borderWidth * 100) << 22);
+            // Create struct-based cache key for collision-free lookups
+            var cacheKey = new MeshCacheKey(outerRadius, borderWidth, edgeMask, segments);
 
             if (_meshCache.TryGetValue(cacheKey, out Mesh cachedMesh))
             {
@@ -162,7 +192,7 @@ namespace RTS.Terrain.Rendering
             {
                 if (mesh != null)
                 {
-                    Object.Destroy(mesh);
+                    UnityEngine.Object.Destroy(mesh);
                 }
             }
             _meshCache.Clear();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using RTS.Terrain.Core;
@@ -34,6 +35,9 @@ namespace RTS.Terrain.Rendering
 
         // Tiles that need border updates (for batch processing)
         private HashSet<Vector2Int> _pendingUpdates = new HashSet<Vector2Int>();
+
+        // Store delegates for proper cleanup (prevents memory leak from lambda closures)
+        private Dictionary<HexTile, Action<int, int>> _tileEventHandlers = new Dictionary<HexTile, Action<int, int>>();
 
         private bool _isInitialized;
 
@@ -201,9 +205,16 @@ namespace RTS.Terrain.Rendering
 
             var material = new Material(shader);
 
-            // Set color
-            material.color = color;
-            material.SetColor("_BaseColor", color);
+            // Set color based on shader type
+            // URP uses _BaseColor, legacy shaders use _Color (accessed via material.color)
+            if (shader.name.StartsWith("Universal Render Pipeline"))
+            {
+                material.SetColor("_BaseColor", color);
+            }
+            else
+            {
+                material.color = color;
+            }
 
             // URP transparency setup for Unlit shader
             material.SetFloat("_Surface", 1); // 1 = Transparent
@@ -243,8 +254,21 @@ namespace RTS.Terrain.Rendering
 
             foreach (var tile in gridManager.Grid.GetAllTiles())
             {
-                tile.OnOwnershipChanged += (prevOwner, newOwner) => OnTileOwnershipChanged(tile, prevOwner, newOwner);
+                SubscribeToTile(tile);
             }
+        }
+
+        /// <summary>
+        /// Subscribe to a single tile's ownership change event.
+        /// Stores the delegate for proper cleanup.
+        /// </summary>
+        private void SubscribeToTile(HexTile tile)
+        {
+            if (tile == null || _tileEventHandlers.ContainsKey(tile)) return;
+
+            Action<int, int> handler = (prevOwner, newOwner) => OnTileOwnershipChanged(tile, prevOwner, newOwner);
+            _tileEventHandlers[tile] = handler;
+            tile.OnOwnershipChanged += handler;
         }
 
         /// <summary>
@@ -252,8 +276,14 @@ namespace RTS.Terrain.Rendering
         /// </summary>
         private void UnsubscribeFromAllTiles()
         {
-            // Note: In a production environment, we'd need to store delegates to properly unsubscribe.
-            // For now, we rely on tiles being cleared/destroyed with the grid.
+            foreach (var kvp in _tileEventHandlers)
+            {
+                if (kvp.Key != null)
+                {
+                    kvp.Key.OnOwnershipChanged -= kvp.Value;
+                }
+            }
+            _tileEventHandlers.Clear();
         }
 
         /// <summary>
