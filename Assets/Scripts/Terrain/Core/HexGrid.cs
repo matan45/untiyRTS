@@ -137,5 +137,139 @@ namespace RTS.Terrain.Core
             }
             GetNeighbors(tile.Coordinates, output);
         }
+
+        #region Fog of War / Visibility Methods
+
+        /// <summary>
+        /// Initialize visibility for all tiles for all players.
+        /// Call this after grid generation to set up per-player visibility states.
+        /// </summary>
+        /// <param name="playerCount">Number of players to initialize visibility for</param>
+        /// <param name="defaultVisible">Default visibility state (true = all visible, for RTS-19)</param>
+        /// <param name="defaultExplored">Default exploration state (true = all explored, for RTS-19)</param>
+        public void InitializeVisibilityForAllTiles(int playerCount, bool defaultVisible = true, bool defaultExplored = true)
+        {
+            foreach (var tile in tiles.Values)
+            {
+                for (int playerId = 0; playerId < playerCount; playerId++)
+                {
+                    tile.InitializeVisibilityForPlayer(playerId, defaultVisible, defaultExplored);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles visible to a specific player.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
+        /// </summary>
+        /// <param name="playerId">Player ID to check visibility for</param>
+        /// <returns>List of visible tiles</returns>
+        public List<HexTile> GetVisibleTiles(int playerId)
+        {
+            var result = new List<HexTile>();
+            GetVisibleTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles visible to a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check visibility for</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetVisibleTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
+            foreach (var tile in tiles.Values)
+            {
+                if (tile.IsVisibleToPlayer(playerId))
+                {
+                    output.Add(tile);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles explored by a specific player.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
+        /// </summary>
+        /// <param name="playerId">Player ID to check exploration for</param>
+        /// <returns>List of explored tiles</returns>
+        public List<HexTile> GetExploredTiles(int playerId)
+        {
+            var result = new List<HexTile>();
+            GetExploredTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles explored by a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check exploration for</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetExploredTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
+            foreach (var tile in tiles.Values)
+            {
+                if (tile.IsExploredByPlayer(playerId))
+                {
+                    output.Add(tile);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles not yet explored by a specific player (black fog).
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
+        /// </summary>
+        /// <param name="playerId">Player ID to check</param>
+        /// <returns>List of unexplored tiles</returns>
+        public List<HexTile> GetUnexploredTiles(int playerId)
+        {
+            var result = new List<HexTile>();
+            GetUnexploredTiles(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles not yet explored by a specific player (non-allocating).
+        /// Use this overload in performance-critical code like per-frame updates.
+        /// </summary>
+        /// <param name="playerId">Player ID to check</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetUnexploredTiles(int playerId, List<HexTile> output)
+        {
+            output.Clear();
+            foreach (var tile in tiles.Values)
+            {
+                if (!tile.IsExploredByPlayer(playerId))
+                {
+                    output.Add(tile);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set visibility for multiple tiles at once (batch operation).
+        /// Useful for updating vision around units.
+        /// </summary>
+        /// <param name="coordinates">List of tile coordinates to update</param>
+        /// <param name="playerId">Player ID to set visibility for</param>
+        /// <param name="isVisible">Visibility state to set</param>
+        public void SetVisibilityBatch(IEnumerable<Vector2Int> coordinates, int playerId, bool isVisible)
+        {
+            foreach (var coord in coordinates)
+            {
+                var tile = GetTile(coord);
+                if (tile != null)
+                {
+                    tile.SetVisibility(playerId, isVisible);
+                }
+            }
+        }
+
+        #endregion
     }
 }
