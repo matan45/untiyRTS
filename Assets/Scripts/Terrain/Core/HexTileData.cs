@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using RTS.Terrain.Data;
 
@@ -24,8 +25,10 @@ namespace RTS.Terrain.Core
         // Resources (serialized as array for JsonUtility)
         public TileResourceValue[] resources;
 
+        // Per-player visibility states for Fog of War
+        public PlayerVisibilityState[] playerVisibility;
+
         // State
-        public bool hasBeenExplored;
         public int occupyingBuildingId = -1;
 
         /// <summary>
@@ -38,7 +41,7 @@ namespace RTS.Terrain.Core
             terrainType = TerrainType.Grassland;
             ownerId = -1;
             resources = Array.Empty<TileResourceValue>();
-            hasBeenExplored = false;
+            playerVisibility = Array.Empty<PlayerVisibilityState>();
             occupyingBuildingId = -1;
         }
 
@@ -52,7 +55,7 @@ namespace RTS.Terrain.Core
             terrainType = terrain;
             ownerId = -1;
             resources = Array.Empty<TileResourceValue>();
-            hasBeenExplored = false;
+            playerVisibility = Array.Empty<PlayerVisibilityState>();
             occupyingBuildingId = -1;
         }
 
@@ -71,7 +74,7 @@ namespace RTS.Terrain.Core
                 terrainType = tile.TerrainType,
                 ownerId = tile.OwnerId,
                 resources = tile.GetResourcesAsArray(),
-                hasBeenExplored = tile.HasBeenExplored,
+                playerVisibility = tile.GetVisibilityAsArray(),
                 occupyingBuildingId = tile.OccupyingBuildingId
             };
         }
@@ -102,12 +105,7 @@ namespace RTS.Terrain.Core
     [Serializable]
     public class HexGridSaveData
     {
-        /// <summary>
-        /// Current save data version. Increment when format changes.
-        /// </summary>
-        public const int CurrentVersion = 1;
-
-        public int version = CurrentVersion;
+            
         public int width;
         public int height;
         public string timestamp;
@@ -118,7 +116,6 @@ namespace RTS.Terrain.Core
         /// </summary>
         public HexGridSaveData()
         {
-            version = CurrentVersion;
             width = 0;
             height = 0;
             timestamp = DateTime.UtcNow.ToString("o");
@@ -130,7 +127,6 @@ namespace RTS.Terrain.Core
         /// </summary>
         public HexGridSaveData(int width, int height)
         {
-            this.version = CurrentVersion;
             this.width = width;
             this.height = height;
             this.timestamp = DateTime.UtcNow.ToString("o");
@@ -159,14 +155,8 @@ namespace RTS.Terrain.Core
 
             try
             {
-                var data = JsonUtility.FromJson<HexGridSaveData>(json);
-
-                if (data.version > CurrentVersion)
-                {
-                    Debug.LogWarning($"HexGridSaveData version {data.version} is newer than supported version {CurrentVersion}. Some data may not load correctly.");
-                }
-
-                return data;
+              
+                return JsonUtility.FromJson<HexGridSaveData>(json);
             }
             catch (Exception e)
             {

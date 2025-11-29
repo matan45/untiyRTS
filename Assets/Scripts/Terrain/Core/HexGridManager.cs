@@ -51,6 +51,10 @@ namespace RTS.Terrain.Core
         [SerializeField, Tooltip("Generate terrain on Start")]
         private bool generateOnStart = true;
 
+        [Header("Fog of War")]
+        [SerializeField, Tooltip("Number of players for visibility initialization")]
+        private int playerCount = 4;
+
         private Vector2 _noiseOffset;
 
         [Header("Rendering")]
@@ -164,6 +168,11 @@ namespace RTS.Terrain.Core
             }
 
             Debug.Log($"HexGridManager: Generated {gridWidth * gridHeight} terrain tiles");
+
+            // Initialize Fog of War visibility for all tiles and players
+            // All tiles start as visible and explored (FoW disabled for RTS-19)
+            Grid.InitializeVisibilityForAllTiles(playerCount, defaultVisible: true, defaultExplored: true);
+            Debug.Log($"HexGridManager: Initialized visibility for {playerCount} players");
 
             // Auto-render if enabled
             if (autoRenderGrid)

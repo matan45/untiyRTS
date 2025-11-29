@@ -47,14 +47,18 @@ namespace RTS.Terrain.Core
         public event Action<int, int> OnOwnershipChanged;
 
         /// <summary>
-        /// Whether this tile has been explored (visible at least once).
+        /// Event fired when visibility changes for a player.
+        /// Parameters: playerId, isVisible
         /// </summary>
-        public bool HasBeenExplored { get; set; }
+        public event Action<int, bool> OnVisibilityChanged;
 
         /// <summary>
         /// Building ID for serialization purposes. -1 means no building.
         /// </summary>
         public int OccupyingBuildingId { get; private set; } = -1;
+
+        // Per-player visibility states for Fog of War
+        private Dictionary<int, PlayerVisibilityState> _playerVisibility = new Dictionary<int, PlayerVisibilityState>();
 
         // Resources dictionary for flexible resource tracking
         private Dictionary<ResourceType, TileResourceValue> _resources = new Dictionary<ResourceType, TileResourceValue>();
@@ -95,9 +99,9 @@ namespace RTS.Terrain.Core
             IsBuildable = true;
             OccupyingBuilding = null;
             OwnerId = -1;
-            HasBeenExplored = false;
             OccupyingBuildingId = -1;
             _resources = new Dictionary<ResourceType, TileResourceValue>();
+            _playerVisibility = new Dictionary<int, PlayerVisibilityState>();
         }
 
         public HexTile(int q, int r, Vector3 worldPosition)
@@ -157,6 +161,125 @@ namespace RTS.Terrain.Core
         public bool IsOwnedBy(int playerId)
         {
             return OwnerId == playerId;
+        }
+
+        #endregion
+
+        #region Fog of War / Visibility Methods
+
+        /// <summary>
+        /// Initialize visibility for a player. Call this for each player at game start.
+        /// </summary>
+        /// <param name="playerId">Player ID to initialize</param>
+        /// <param name="visible">Initial visibility state (default: true for RTS-19)</param>
+        /// <param name="explored">Initial exploration state (default: true for RTS-19)</param>
+        public void InitializeVisibilityForPlayer(int playerId, bool visible = true, bool explored = true)
+        {
+            _playerVisibility[playerId] = new PlayerVisibilityState(playerId, visible, explored);
+        }
+
+        /// <summary>
+        /// Check if this tile is currently visible to a player.
+        /// Returns true if player has no visibility state (default: visible).
+        /// </summary>
+        public bool IsVisibleToPlayer(int playerId)
+        {
+            return !_playerVisibility.TryGetValue(playerId, out var state) || state.isVisible;
+        }
+
+        /// <summary>
+        /// Check if this tile has been explored by a player.
+        /// Returns true if player has no visibility state (default: explored).
+        /// </summary>
+        public bool IsExploredByPlayer(int playerId)
+        {
+            return !_playerVisibility.TryGetValue(playerId, out var state) || state.hasBeenExplored;
+        }
+
+        /// <summary>
+        /// Set visibility state for a player.
+        /// Automatically marks as explored when becoming visible.
+        /// </summary>
+        /// <param name="playerId">Player ID</param>
+        /// <param name="isVisible">Whether tile is currently visible</param>
+        public void SetVisibility(int playerId, bool isVisible)
+        {
+            if (!_playerVisibility.TryGetValue(playerId, out var state))
+            {
+                state = new PlayerVisibilityState(playerId, isVisible, isVisible);
+                _playerVisibility[playerId] = state;
+            }
+            else if (state.isVisible != isVisible)
+            {
+                state.isVisible = isVisible;
+                if (isVisible)
+                {
+                    state.hasBeenExplored = true;
+                }
+            }
+            else
+            {
+                return; // No change
+            }
+
+            OnVisibilityChanged?.Invoke(playerId, isVisible);
+        }
+
+        /// <summary>
+        /// Mark this tile as explored by a player.
+        /// </summary>
+        public void MarkExplored(int playerId)
+        {
+            if (!_playerVisibility.TryGetValue(playerId, out var state))
+            {
+                state = new PlayerVisibilityState(playerId, false, true);
+                _playerVisibility[playerId] = state;
+            }
+            else
+            {
+                state.hasBeenExplored = true;
+            }
+        }
+
+        /// <summary>
+        /// Get visibility state for a player.
+        /// Returns null if player has no visibility state.
+        /// </summary>
+        public PlayerVisibilityState GetVisibilityState(int playerId)
+        {
+            return _playerVisibility.TryGetValue(playerId, out var state) ? state : null;
+        }
+
+        /// <summary>
+        /// Get visibility states as array for serialization.
+        /// </summary>
+        public PlayerVisibilityState[] GetVisibilityAsArray()
+        {
+            var result = new PlayerVisibilityState[_playerVisibility.Count];
+            int i = 0;
+            foreach (var state in _playerVisibility.Values)
+            {
+                result[i++] = state.Clone();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Load visibility states from array (for deserialization).
+        /// </summary>
+        public void LoadVisibility(PlayerVisibilityState[] states)
+        {
+            _playerVisibility.Clear();
+            if (states != null)
+            {
+                foreach (var state in states)
+                {
+                    if (state != null)
+                    {
+                        _playerVisibility[state.playerId] = state;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -399,11 +522,13 @@ namespace RTS.Terrain.Core
 
             TerrainType = data.terrainType;
             OwnerId = data.ownerId;
-            HasBeenExplored = data.hasBeenExplored;
             OccupyingBuildingId = data.occupyingBuildingId;
 
             // Load resources
             LoadResources(data.resources);
+
+            // Load per-player visibility states
+            LoadVisibility(data.playerVisibility);
 
             // Apply config if provided
             if (config != null)

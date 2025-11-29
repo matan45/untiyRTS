@@ -137,5 +137,94 @@ namespace RTS.Terrain.Core
             }
             GetNeighbors(tile.Coordinates, output);
         }
+
+        #region Fog of War / Visibility Methods
+
+        /// <summary>
+        /// Initialize visibility for all tiles for all players.
+        /// Call this after grid generation to set up per-player visibility states.
+        /// </summary>
+        /// <param name="playerCount">Number of players to initialize visibility for</param>
+        /// <param name="defaultVisible">Default visibility state (true = all visible, for RTS-19)</param>
+        /// <param name="defaultExplored">Default exploration state (true = all explored, for RTS-19)</param>
+        public void InitializeVisibilityForAllTiles(int playerCount, bool defaultVisible = true, bool defaultExplored = true)
+        {
+            foreach (var tile in tiles.Values)
+            {
+                for (int playerId = 0; playerId < playerCount; playerId++)
+                {
+                    tile.InitializeVisibilityForPlayer(playerId, defaultVisible, defaultExplored);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles visible to a specific player.
+        /// </summary>
+        /// <param name="playerId">Player ID to check visibility for</param>
+        /// <returns>Enumerable of visible tiles</returns>
+        public IEnumerable<HexTile> GetVisibleTiles(int playerId)
+        {
+            foreach (var tile in tiles.Values)
+            {
+                if (tile.IsVisibleToPlayer(playerId))
+                {
+                    yield return tile;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles explored by a specific player.
+        /// </summary>
+        /// <param name="playerId">Player ID to check exploration for</param>
+        /// <returns>Enumerable of explored tiles</returns>
+        public IEnumerable<HexTile> GetExploredTiles(int playerId)
+        {
+            foreach (var tile in tiles.Values)
+            {
+                if (tile.IsExploredByPlayer(playerId))
+                {
+                    yield return tile;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all tiles not yet explored by a specific player (black fog).
+        /// </summary>
+        /// <param name="playerId">Player ID to check</param>
+        /// <returns>Enumerable of unexplored tiles</returns>
+        public IEnumerable<HexTile> GetUnexploredTiles(int playerId)
+        {
+            foreach (var tile in tiles.Values)
+            {
+                if (!tile.IsExploredByPlayer(playerId))
+                {
+                    yield return tile;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set visibility for multiple tiles at once (batch operation).
+        /// Useful for updating vision around units.
+        /// </summary>
+        /// <param name="coordinates">List of tile coordinates to update</param>
+        /// <param name="playerId">Player ID to set visibility for</param>
+        /// <param name="isVisible">Visibility state to set</param>
+        public void SetVisibilityBatch(IEnumerable<Vector2Int> coordinates, int playerId, bool isVisible)
+        {
+            foreach (var coord in coordinates)
+            {
+                var tile = GetTile(coord);
+                if (tile != null)
+                {
+                    tile.SetVisibility(playerId, isVisible);
+                }
+            }
+        }
+
+        #endregion
     }
 }
