@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using RTS.Terrain;
@@ -15,6 +16,17 @@ namespace RTS.Terrain.Core
     public class HexGridManager : MonoBehaviour
     {
         public static HexGridManager Instance { get; private set; }
+
+        /// <summary>
+        /// Event fired when the grid is fully ready (generated and rendered).
+        /// Subscribe to this instead of polling for grid readiness.
+        /// </summary>
+        public static event Action<HexGridManager> OnGridReady;
+
+        /// <summary>
+        /// Whether the grid has been fully initialized and is ready for use.
+        /// </summary>
+        public bool IsGridReady { get; private set; }
 
         [Header("Singleton Settings")]
         [SerializeField, Tooltip("If true, this manager will persist across scene loads. For RTS levels, this should typically be FALSE.")]
@@ -158,6 +170,10 @@ namespace RTS.Terrain.Core
             {
                 RenderGrid();
             }
+
+            // Mark grid as ready and notify subscribers
+            IsGridReady = true;
+            OnGridReady?.Invoke(this);
         }
 
         /// <summary>
@@ -244,7 +260,6 @@ namespace RTS.Terrain.Core
             }
 
             gridRenderer.RenderGrid(Grid);
-            Debug.Log("HexGridManager: Triggered grid rendering");
         }
 
         /// <summary>

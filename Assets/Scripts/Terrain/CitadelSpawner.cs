@@ -33,6 +33,10 @@ namespace RTS.Terrain
             TerrainType.Plains
         };
 
+        [Header("Ownership")]
+        [Tooltip("Player ID that owns the citadel tile (0 = Player 1, 1 = Player 2, etc.)")]
+        [SerializeField] private int ownerPlayerId = 0;
+
         private void Start()
         {
             if (spawnOnStart)
@@ -110,8 +114,11 @@ namespace RTS.Terrain
             // Register the citadel with the tile
             selectedTile.SetOccupyingBuilding(citadel);
 
+            // Set tile ownership
+            selectedTile.SetOwner(ownerPlayerId);
+
             Debug.Log($"CitadelSpawner: Successfully spawned citadel at coordinates {selectedTile.Coordinates} " +
-                     $"(Terrain: {selectedTile.TerrainType})");
+                     $"(Terrain: {selectedTile.TerrainType}, Owner: Player {ownerPlayerId})");
         }
 
         /// <summary>

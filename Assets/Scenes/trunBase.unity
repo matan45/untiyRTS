@@ -1203,7 +1203,7 @@ MonoBehaviour:
   m_text: TILE INFO
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1888,7 +1888,7 @@ MonoBehaviour:
   m_text: <b>Terrain:</b> Grassland
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2351,7 +2351,7 @@ MonoBehaviour:
   m_text: <b>Owner:</b> Neutral
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2678,7 +2678,7 @@ MonoBehaviour:
   m_text: "<b>Resources:</b>\n  None"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3218,7 +3218,7 @@ MonoBehaviour:
   m_text: "<b>Modifiers:</b>\n  None"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3993,7 +3993,7 @@ MonoBehaviour:
   m_text: <b>Position:</b> (0, 0)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07119f633bffa024b9282d462f17f983, type: 2}
-  m_sharedMaterial: {fileID: 1684417487120489961, guid: 07119f633bffa024b9282d462f17f983, type: 2}
+  m_sharedMaterial: {fileID: -8790201140224622510, guid: 07119f633bffa024b9282d462f17f983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4082,6 +4082,7 @@ GameObject:
   - component: {fileID: 1791548328}
   - component: {fileID: 1791548330}
   - component: {fileID: 1791548331}
+  - component: {fileID: 1791548332}
   m_Layer: 0
   m_Name: HexGridManager
   m_TagString: Untagged
@@ -4173,6 +4174,21 @@ MonoBehaviour:
   tilesPerFrame: 100
   useGPUInstancing: 1
   showDebugInfo: 0
+--- !u!114 &1791548332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1791548326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69751421d0c901a478cce41ec556143e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RTS.Terrain.Rendering.TerritoryOwnershipVisual
+  visualConfig: {fileID: 11400000, guid: 194d1efc18a0fcf44842e4451ab0f6f9, type: 2}
+  playerColors: {fileID: 11400000, guid: 65263d1712e12044ea6b966d36abaa36, type: 2}
+  gridManager: {fileID: 1791548330}
 --- !u!1 &1855767679
 GameObject:
   m_ObjectHideFlags: 0
