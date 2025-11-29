@@ -208,6 +208,7 @@ namespace RTS.Terrain.Core
             {
                 state = new PlayerVisibilityState(playerId, isVisible, isVisible);
                 _playerVisibility[playerId] = state;
+                OnVisibilityChanged?.Invoke(playerId, isVisible);
             }
             else if (state.isVisible != isVisible)
             {
@@ -216,13 +217,8 @@ namespace RTS.Terrain.Core
                 {
                     state.hasBeenExplored = true;
                 }
+                OnVisibilityChanged?.Invoke(playerId, isVisible);
             }
-            else
-            {
-                return; // No change
-            }
-
-            OnVisibilityChanged?.Invoke(playerId, isVisible);
         }
 
         /// <summary>

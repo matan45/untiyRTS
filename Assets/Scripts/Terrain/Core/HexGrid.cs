@@ -270,6 +270,37 @@ namespace RTS.Terrain.Core
             }
         }
 
+        /// <summary>
+        /// Get all tiles owned by a specific player.
+        /// Note: Allocates a new list. For performance-critical code, use the non-allocating overload.
+        /// </summary>
+        /// <param name="playerId">Player ID to check ownership for</param>
+        /// <returns>List of tiles owned by the player</returns>
+        public List<HexTile> GetTilesOwnedBy(int playerId)
+        {
+            var result = new List<HexTile>();
+            GetTilesOwnedBy(playerId, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get all tiles owned by a specific player (non-allocating).
+        /// Use this overload in performance-critical code.
+        /// </summary>
+        /// <param name="playerId">Player ID to check ownership for</param>
+        /// <param name="output">Pre-allocated list to store results (will be cleared first)</param>
+        public void GetTilesOwnedBy(int playerId, List<HexTile> output)
+        {
+            output.Clear();
+            foreach (var tile in tiles.Values)
+            {
+                if (tile.IsOwnedBy(playerId))
+                {
+                    output.Add(tile);
+                }
+            }
+        }
+
         #endregion
     }
 }
