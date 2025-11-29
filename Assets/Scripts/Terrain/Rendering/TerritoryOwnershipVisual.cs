@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using RTS.Terrain.Core;
@@ -38,59 +37,54 @@ namespace RTS.Terrain.Rendering
 
         private bool _isInitialized;
 
-        private void Start()
+        private void OnEnable()
         {
-            StartCoroutine(InitializeAfterGridReady());
-        }
+            // Subscribe to grid ready event
+            HexGridManager.OnGridReady += OnGridReady;
 
-        private IEnumerator InitializeAfterGridReady()
-        {
-            // Use serialized reference if available, otherwise find instance
-            HexGridManager manager = gridManager != null ? gridManager : HexGridManager.Instance;
-
-            // Wait for grid manager to be available and have tiles
-            int waitFrames = 0;
-            while (manager == null || manager.Grid == null || !HasTiles(manager.Grid))
+            // If grid is already ready (late subscription), initialize immediately
+            if (gridManager != null && gridManager.IsGridReady)
             {
-                waitFrames++;
-                if (waitFrames > 300) // Timeout after 5 seconds at 60fps
-                {
-                    Debug.LogError("TerritoryOwnershipVisual: Timeout waiting for grid.");
-                    yield break;
-                }
-                // Re-check each frame in case it becomes available
-                if (manager == null)
-                {
-                    manager = gridManager != null ? gridManager : HexGridManager.Instance;
-                }
-                yield return null;
+                Initialize();
+            }
+            else if (HexGridManager.Instance != null && HexGridManager.Instance.IsGridReady)
+            {
+                gridManager = HexGridManager.Instance;
+                Initialize();
             }
 
-            // Assign to the field for later use
+            // Re-subscribe and refresh if already initialized (component was disabled then re-enabled)
+            if (_isInitialized && gridManager != null)
+            {
+                SubscribeToAllTiles();
+                RefreshAllBorders();
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Unsubscribe from grid ready event
+            HexGridManager.OnGridReady -= OnGridReady;
+
+            UnsubscribeFromAllTiles();
+            HideAllBorders();
+        }
+
+        /// <summary>
+        /// Called when the HexGridManager signals the grid is ready.
+        /// </summary>
+        private void OnGridReady(HexGridManager manager)
+        {
             gridManager = manager;
-
-            // Wait one more frame to ensure everything is settled
-            yield return null;
-
             Initialize();
         }
 
-        private bool HasTiles(HexGrid grid)
-        {
-            foreach (var _ in grid.GetAllTiles())
-                return true;
-            return false;
-        }
-
+        /// <summary>
+        /// Initialize the territory visual system.
+        /// </summary>
         private void Initialize()
         {
             if (_isInitialized) return;
-
-            // Find grid manager if not assigned
-            if (gridManager == null)
-            {
-                gridManager = HexGridManager.Instance;
-            }
 
             if (gridManager == null || gridManager.Grid == null)
             {
@@ -103,32 +97,6 @@ namespace RTS.Terrain.Rendering
             RefreshAllBorders();
 
             _isInitialized = true;
-        }
-
-        private int GetTileCount()
-        {
-            int count = 0;
-            if (gridManager?.Grid != null)
-            {
-                foreach (var _ in gridManager.Grid.GetAllTiles())
-                    count++;
-            }
-            return count;
-        }
-
-        private void OnEnable()
-        {
-            if (_isInitialized && gridManager != null)
-            {
-                SubscribeToAllTiles();
-                RefreshAllBorders();
-            }
-        }
-
-        private void OnDisable()
-        {
-            UnsubscribeFromAllTiles();
-            HideAllBorders();
         }
 
         /// <summary>
