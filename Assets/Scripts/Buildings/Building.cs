@@ -246,7 +246,26 @@ namespace RTS.Buildings
             return Mathf.Clamp01(constructionProgress / buildingData.buildTime);
         }
 
-        private void CompleteConstruction()
+        /// <summary>
+        /// Update construction progress directly (for turn-based mode).
+        /// </summary>
+        /// <param name="progress">Progress value from 0 to 1.</param>
+        public void UpdateConstructionProgress(float progress)
+        {
+            if (IsConstructed)
+                return;
+
+            // Store progress as a ratio of build time for consistency
+            if (buildingData != null && buildingData.buildTime > 0)
+            {
+                constructionProgress = progress * buildingData.buildTime;
+            }
+
+            // Update the construction percentage text
+            UpdateConstructionText();
+        }
+
+        public void CompleteConstruction()
         {
             IsConstructed = true;
             constructionProgress = buildingData.buildTime;
