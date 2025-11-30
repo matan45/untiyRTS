@@ -16,6 +16,10 @@ namespace RTS.Data
     public int creditsCost;
     public int powerRequired;
     public float buildTime = 5f;
+
+    [Header("Turn-Based Construction")]
+    [Tooltip("Number of turns to complete construction in turn-based mode.")]
+    public int turnsToComplete = 3;
     
     [Header("Placement")]
     public Vector2Int size = new Vector2Int(2, 2); // Grid size
@@ -27,8 +31,8 @@ namespace RTS.Data
     
     [Header("Production")]
     public bool canProduceUnits = false;
-    public bool providespower = false;
-    public int powerProvided = 0;
+    public bool ProvidesPower = false;
+    public int PowerProvided = 0;
 
     [Header("Actions")]
     [Tooltip("Configuration for building actions (sell, upgrade, unit production, etc.)")]

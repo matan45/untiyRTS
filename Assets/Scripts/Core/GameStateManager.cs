@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using RTS.Terrain.Core;
+using RTS.Core.GameMode;
+using RTS.TurnBased;
 
 namespace RTS.Core
 {
@@ -185,14 +187,26 @@ namespace RTS.Core
 
         #endregion
 
-        #region Turn Management (Stubs)
+        #region Turn Management
 
         /// <summary>
         /// Trigger the start of a new turn.
-        /// Call this from the turn system when implemented.
+        /// Delegates to TurnManager if in turn-based mode, otherwise uses legacy behavior.
         /// </summary>
         public void TriggerTurnStart()
         {
+            if (GameModeManager.Instance != null && GameModeManager.Instance.IsTurnBased)
+            {
+                var turnManager = GameModeManager.Instance.GetTurnManager();
+                if (turnManager != null)
+                {
+                    turnManager.StartTurn();
+                    CurrentTurn = turnManager.CurrentTurn;
+                    return;
+                }
+            }
+
+            // Legacy fallback
             CurrentTurn++;
             Debug.Log($"GameStateManager: Turn {CurrentTurn} started");
             OnTurnStart?.Invoke();
@@ -200,12 +214,87 @@ namespace RTS.Core
 
         /// <summary>
         /// Trigger the end of the current turn.
-        /// Call this from the turn system when implemented.
+        /// Delegates to TurnManager if in turn-based mode, otherwise uses legacy behavior.
         /// </summary>
         public void TriggerTurnEnd()
         {
+            if (GameModeManager.Instance != null && GameModeManager.Instance.IsTurnBased)
+            {
+                var turnManager = GameModeManager.Instance.GetTurnManager();
+                if (turnManager != null)
+                {
+                    turnManager.EndTurn();
+                    return;
+                }
+            }
+
+            // Legacy fallback
             Debug.Log($"GameStateManager: Turn {CurrentTurn} ended");
             OnTurnEnd?.Invoke();
+        }
+
+        /// <summary>
+        /// End the current player's turn and start the next (for turn-based mode).
+        /// This is the main method to call when the player clicks "End Turn".
+        /// </summary>
+        public void EndPlayerTurn()
+        {
+            if (GameModeManager.Instance != null && GameModeManager.Instance.IsTurnBased)
+            {
+                var turnBasedMode = GameModeManager.Instance.CurrentMode as TurnBasedMode;
+                if (turnBasedMode != null)
+                {
+                    turnBasedMode.EndPlayerTurn();
+                    CurrentTurn = turnBasedMode.CurrentTurn;
+                    return;
+                }
+            }
+
+            Debug.LogWarning("GameStateManager: EndPlayerTurn called but not in turn-based mode.");
+        }
+
+        /// <summary>
+        /// Whether the player can currently perform actions.
+        /// In real-time: true during Playing phase.
+        /// In turn-based: true during the player's turn.
+        /// </summary>
+        public bool CanPlayerAct
+        {
+            get
+            {
+                if (CurrentPhase != GamePhase.Playing)
+                    return false;
+
+                if (GameModeManager.Instance != null)
+                {
+                    return GameModeManager.Instance.CanPlayerAct;
+                }
+
+                // Legacy fallback: assume player can act during Playing phase
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Whether the game is in turn-based mode.
+        /// </summary>
+        public bool IsTurnBasedMode
+        {
+            get
+            {
+                return GameModeManager.Instance != null && GameModeManager.Instance.IsTurnBased;
+            }
+        }
+
+        /// <summary>
+        /// Whether the game is in real-time mode.
+        /// </summary>
+        public bool IsRealTimeMode
+        {
+            get
+            {
+                return GameModeManager.Instance == null || GameModeManager.Instance.IsRealTime;
+            }
         }
 
         #endregion
