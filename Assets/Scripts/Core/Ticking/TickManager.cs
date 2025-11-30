@@ -33,7 +33,7 @@ namespace RTS.Core.Ticking
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (Instance != null && (object)Instance != this)
             {
                 Debug.LogWarning($"TickManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
@@ -45,7 +45,7 @@ namespace RTS.Core.Ticking
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if ((object)Instance == this)
             {
                 Instance = null;
             }

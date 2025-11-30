@@ -36,7 +36,7 @@ namespace RTS.Core.Time
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (Instance != null && (object)Instance != this)
             {
                 Debug.LogWarning($"TimeManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
@@ -48,7 +48,7 @@ namespace RTS.Core.Time
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if ((object)Instance == this)
             {
                 Instance = null;
             }

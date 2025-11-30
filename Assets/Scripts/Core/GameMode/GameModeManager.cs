@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using RTS.Core.Time;
 using RTS.Core.Ticking;
@@ -12,6 +13,12 @@ namespace RTS.Core.GameMode
     public class GameModeManager : MonoBehaviour, IGameModeManager
     {
         public static IGameModeManager Instance { get; private set; }
+
+        /// <summary>
+        /// Event fired when GameModeManager has completed initialization.
+        /// Subscribe to this for deferred registration with turn/tick systems.
+        /// </summary>
+        public static event Action OnInitialized;
 
         [Header("Configuration")]
         [SerializeField]
@@ -50,7 +57,7 @@ namespace RTS.Core.GameMode
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (Instance != null && (object)Instance != this)
             {
                 Debug.LogWarning($"GameModeManager: Duplicate instance found on {gameObject.name}. Destroying duplicate.");
                 Destroy(gameObject);
@@ -72,7 +79,7 @@ namespace RTS.Core.GameMode
                 _currentMode.Shutdown();
             }
 
-            if (Instance == this)
+            if ((object)Instance == this)
             {
                 Instance = null;
             }
@@ -165,6 +172,9 @@ namespace RTS.Core.GameMode
 
             _isInitialized = true;
             Debug.Log($"GameModeManager: Initialized with {_currentMode.ModeName} mode.");
+
+            // Notify listeners that initialization is complete
+            OnInitialized?.Invoke();
         }
 
         private void HandlePhaseChanged(GamePhase newPhase)

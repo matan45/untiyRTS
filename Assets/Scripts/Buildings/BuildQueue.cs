@@ -157,15 +157,35 @@ public class BuildQueue : MonoBehaviour, ITickable, ITurnListener
             _useTickSystem = true;
         }
 
-        // Register with TurnManager for turn-based mode (if available)
+        // Register with TurnManager for turn-based mode
+        // If GameModeManager is already initialized, register immediately
+        // Otherwise, defer registration until it's ready
+        if (GameModeManager.Instance != null && GameModeManager.Instance.CurrentMode != null)
+        {
+            RegisterWithTurnManager();
+        }
+        else
+        {
+            // Subscribe to initialization event for deferred registration
+            GameModeManager.OnInitialized += OnGameModeInitialized;
+        }
+    }
+
+    private void OnGameModeInitialized()
+    {
+        // Unsubscribe to avoid duplicate calls
+        GameModeManager.OnInitialized -= OnGameModeInitialized;
+
+        // Now register with TurnManager
         RegisterWithTurnManager();
     }
 
     void Update()
     {
-        // Fallback: If TickManager isn't available, use legacy Update-based processing
-        // This ensures backward compatibility when the new managers aren't in the scene
-        if (!_useTickSystem && queue.Count > 0)
+        // Fallback: Only use legacy Update-based processing if TickManager was NEVER available
+        // Double-check TickManager.Instance is still null to prevent double-processing
+        // if TickManager becomes available after Start()
+        if (!_useTickSystem && TickManager.Instance == null && queue.Count > 0)
         {
             // Only process in real-time mode (or when GameModeManager isn't present)
             if (GameModeManager.Instance == null || !GameModeManager.Instance.IsTurnBased)
@@ -177,6 +197,9 @@ public class BuildQueue : MonoBehaviour, ITickable, ITurnListener
 
     void OnDestroy()
     {
+        // Unsubscribe from initialization event (in case destroyed before init)
+        GameModeManager.OnInitialized -= OnGameModeInitialized;
+
         // Unregister from TickManager
         if (TickManager.Instance != null)
         {
