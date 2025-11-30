@@ -274,9 +274,9 @@ namespace RTS.Buildings
             UpdateConstructionText();
 
             // Add power if this building provides it
-            if (buildingData.providespower && ResourceManager.Instance != null)
+            if (buildingData.ProvidesPower && ResourceManager.Instance != null)
             {
-                ResourceManager.Instance.AddPower(buildingData.powerProvided);
+                ResourceManager.Instance.AddPower(buildingData.PowerProvided);
             }
         }
 

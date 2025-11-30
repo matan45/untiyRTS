@@ -5,10 +5,11 @@ namespace RTS.Core.Time
     /// <summary>
     /// Central time coordination singleton.
     /// Provides access to the current time provider based on game mode.
+    /// Implements ITimeManager for testability.
     /// </summary>
-    public class TimeManager : MonoBehaviour
+    public class TimeManager : MonoBehaviour, ITimeManager
     {
-        public static TimeManager Instance { get; private set; }
+        public static ITimeManager Instance { get; private set; }
 
         private ITimeProvider _currentProvider;
 

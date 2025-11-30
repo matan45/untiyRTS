@@ -7,10 +7,11 @@ namespace RTS.Core.GameMode
     /// <summary>
     /// Central manager for game mode selection and coordination.
     /// Handles initialization-time mode selection and coordinates time/tick systems.
+    /// Implements IGameModeManager for testability.
     /// </summary>
-    public class GameModeManager : MonoBehaviour
+    public class GameModeManager : MonoBehaviour, IGameModeManager
     {
-        public static GameModeManager Instance { get; private set; }
+        public static IGameModeManager Instance { get; private set; }
 
         [Header("Configuration")]
         [SerializeField]
@@ -18,8 +19,8 @@ namespace RTS.Core.GameMode
         private GameModeConfigSO modeConfig;
 
         private IGameMode _currentMode;
-        private TimeManager _timeManager;
-        private TickManager _tickManager;
+        private ITimeManager _timeManager;
+        private ITickManager _tickManager;
         private bool _isInitialized;
 
         /// <summary>
@@ -84,8 +85,9 @@ namespace RTS.Core.GameMode
             // Let the current mode handle its per-frame logic
             _currentMode.Update();
 
-            // Process ticks using current mode's time provider
-            if (_currentMode.TimeProvider != null && !_currentMode.TimeProvider.IsPaused)
+            // Process ticks continuously only in real-time mode
+            // Turn-based mode handles tick processing in TurnBasedMode.HandleTurnEnd()
+            if (IsRealTime && _currentMode.TimeProvider != null && !_currentMode.TimeProvider.IsPaused)
             {
                 float deltaTime = _currentMode.TimeProvider.DeltaTime;
                 if (deltaTime > 0 && _tickManager != null)
@@ -140,6 +142,13 @@ namespace RTS.Core.GameMode
                         _currentMode = new RTS.RealTime.RealTimeMode();
                         break;
                 }
+            }
+
+            // Validate mode creation
+            if (_currentMode == null)
+            {
+                Debug.LogError("GameModeManager: Failed to create game mode. Aborting initialization.");
+                return;
             }
 
             // Initialize the mode

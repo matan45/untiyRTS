@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace RTS.Core.Ticking
@@ -7,17 +7,24 @@ namespace RTS.Core.Ticking
     /// <summary>
     /// Manages all tickable systems and processes them in priority order.
     /// Systems register/unregister themselves to receive time updates.
+    /// List is kept sorted by priority to avoid per-frame allocations.
+    /// Implements ITickManager for testability.
     /// </summary>
-    public class TickManager : MonoBehaviour
+    public class TickManager : MonoBehaviour, ITickManager
     {
-        public static TickManager Instance { get; private set; }
+        public static ITickManager Instance { get; private set; }
 
         private readonly List<ITickable> _tickables = new List<ITickable>();
         private bool _isTicking;
+        private bool _needsSort;
 
         // Pending operations to avoid modification during iteration
         private readonly List<ITickable> _pendingAdd = new List<ITickable>();
         private readonly List<ITickable> _pendingRemove = new List<ITickable>();
+
+        // Reusable comparison to avoid delegate allocation
+        private static readonly Comparison<ITickable> PriorityComparison =
+            (a, b) => a.TickPriority.CompareTo(b.TickPriority);
 
         /// <summary>
         /// Number of registered tickable systems.
@@ -65,6 +72,7 @@ namespace RTS.Core.Ticking
                 if (!_tickables.Contains(tickable))
                 {
                     _tickables.Add(tickable);
+                    _needsSort = true;
                 }
             }
         }
@@ -88,6 +96,7 @@ namespace RTS.Core.Ticking
             else
             {
                 _tickables.Remove(tickable);
+                // No need to re-sort on removal - order is preserved
             }
         }
 
@@ -100,22 +109,31 @@ namespace RTS.Core.Ticking
         {
             if (deltaTime <= 0) return;
 
+            // Sort if needed (only when tickables were added)
+            if (_needsSort)
+            {
+                _tickables.Sort(PriorityComparison);
+                _needsSort = false;
+            }
+
             _isTicking = true;
 
             try
             {
-                // Process tickables sorted by priority (lower first)
-                var activeTickables = _tickables
-                    .Where(t => t != null && t.IsTickActive)
-                    .OrderBy(t => t.TickPriority);
-
-                foreach (var tickable in activeTickables)
+                // Process tickables in priority order (already sorted)
+                int count = _tickables.Count;
+                for (int i = 0; i < count; i++)
                 {
+                    ITickable tickable = _tickables[i];
+
+                    if (tickable == null || !tickable.IsTickActive)
+                        continue;
+
                     try
                     {
                         tickable.Tick(deltaTime);
                     }
-                    catch (System.Exception e)
+                    catch (Exception e)
                     {
                         Debug.LogError($"TickManager: Error in tickable {tickable.GetType().Name}: {e.Message}");
                     }
@@ -131,21 +149,28 @@ namespace RTS.Core.Ticking
         private void ProcessPendingOperations()
         {
             // Process pending additions
-            foreach (var tickable in _pendingAdd)
+            if (_pendingAdd.Count > 0)
             {
-                if (!_tickables.Contains(tickable))
+                foreach (var tickable in _pendingAdd)
                 {
-                    _tickables.Add(tickable);
+                    if (!_tickables.Contains(tickable))
+                    {
+                        _tickables.Add(tickable);
+                        _needsSort = true;
+                    }
                 }
+                _pendingAdd.Clear();
             }
-            _pendingAdd.Clear();
 
             // Process pending removals
-            foreach (var tickable in _pendingRemove)
+            if (_pendingRemove.Count > 0)
             {
-                _tickables.Remove(tickable);
+                foreach (var tickable in _pendingRemove)
+                {
+                    _tickables.Remove(tickable);
+                }
+                _pendingRemove.Clear();
             }
-            _pendingRemove.Clear();
         }
     }
 }

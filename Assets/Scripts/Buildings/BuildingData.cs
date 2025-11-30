@@ -31,8 +31,8 @@ namespace RTS.Data
     
     [Header("Production")]
     public bool canProduceUnits = false;
-    public bool providespower = false;
-    public int powerProvided = 0;
+    public bool ProvidesPower = false;
+    public int PowerProvided = 0;
 
     [Header("Actions")]
     [Tooltip("Configuration for building actions (sell, upgrade, unit production, etc.)")]
